@@ -15,6 +15,8 @@ import java.util.regex.Pattern;
 import assemble.ResultAss;
 import db.TransformSDF;
 import isotope.IsotopeCal;
+import property.PropertyName;
+import property.SoftwareProperties;
 import rawData.MzXMLflow;
 import metFrag.MetFragParaList;
 import org.apache.commons.cli.CommandLine;
@@ -37,10 +39,11 @@ public class MetaboIdent {
     public static void main(String[] args) throws ParseException, IOException, ParserConfigurationException, SAXException {
         // TODO Auto-generated method stub
         long startTime = System.currentTimeMillis();
-
-        String version = "v20150315";
+        String version = "vCCCC";
         Options options = new Options();
 
+        options.addOption("p", true, "Gloabal property file path");
+        options.addOption("s", false, "Sum up the output files");
         //multi-id method
         options.addOption("f", true, "ID flow__1=MS1, 2=MetFrag, 3=SpectrumLib. Default is 1");
         options.addOption("db2Type", true, "MS2 metabolites database type\n1=LocalPSV 2=LocalSDF 3=PubChem");
@@ -61,10 +64,11 @@ public class MetaboIdent {
         options.addOption("a", true, "The index of adduct. Default: 1;7;9;12 ([M+H]+,[M+Na]+,[M+K]+,[M+NH4]+)");
         options.addOption("h", false, "Help");
 
-        options.addOption("s", false, "Sum up the output files");
-
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
+
+        SoftwareProperties.readPropFromFile(cmd.getOptionValue("p"));
+
         if (cmd.hasOption("h") || cmd.hasOption("help") || args.length == 0) {
             HelpFormatter f = new HelpFormatter();
             System.out.println("java -jar MetaboliteIdentify.jar");
@@ -75,11 +79,11 @@ public class MetaboIdent {
 
         Logger logger = Logger.getLogger(MetaboIdent.class.getName());
 
-        int idFlow = 1;
-        if (cmd.hasOption("f")){
-            idFlow = Integer.valueOf(cmd.getOptionValue("f"));
+        Integer idFlow = 1;
+        if (SoftwareProperties.getPropertiesPair().get(PropertyName.getID_WORKFLOW()) != null){
+            idFlow = Integer.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getID_WORKFLOW()));
         }else {
-            logger.info("Choose the id workflow with -f, this turn MS1 runs identification");
+            logger.info("Set the id_workflow in the global property file");
         }
 
         if (idFlow == 1) {
@@ -103,7 +107,6 @@ public class MetaboIdent {
                 if (dbType == 1) {
                     readMetaboDB.readHMDBFromXMLs(db);
                 } else if (dbType == 2) {
-                    readMetaboDB.readPubChem(db);
                 } else if (dbType == 3) {
                     readMetaboDB.readKEGG(db);
                 } else if (dbType == 4) {
@@ -195,8 +198,10 @@ public class MetaboIdent {
                 logger.warning("Lack of parameters__ -i2, -db2Type, -db2(offline)");
             }
         } else if (idFlow == 3) {
-            if (cmd.hasOption("i2") && cmd.hasOption("sLib")){
-                PostXCMSflow.ms2idSLib(cmd.getOptionValue("i2"), cmd.getOptionValue("sLib"), 10.0);
+            String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
+            String tmpSLib = SoftwareProperties.getPropertiesPair().get(PropertyName.getSPECTRA_LIB_PATH());
+            if (tmpInputFile != null && tmpSLib != null){
+                PostXCMSflow.ms2idSLib(tmpInputFile, tmpSLib, 10.0);
             }else {
                 logger.warning("Lack of parameters__-i2, -sLib");
             }

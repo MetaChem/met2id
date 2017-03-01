@@ -1,8 +1,5 @@
 package db;
 
-import ncbi.pubchem.PCCompound;
-import ncbi.pubchem.PCCompounds;
-import ncbi.pubchem.PCInfoData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -455,129 +452,12 @@ public class readMetaboDB {
      * @param dbxml 文件或者包含xml的文件夹
      * @throws IOException
      */
-    public static void readPubChem(String dbxml) throws IOException {
-        System.out.println("read metabolite database " + dbxml);
-
-        File inFile = new File(dbxml);
-        ArrayList<String> xmlList = new ArrayList<String>();
-        if (inFile.isFile()) {
-            xmlList.add(dbxml);
-        } else if (inFile.isDirectory()) {
-            File[] files = inFile.listFiles();
-            for (int j = 0; j < files.length; j++) {
-                xmlList.add(files[j].getAbsolutePath());
-            }
-        }
-
-        int total_metabolite = 0;
-        int total_valid_metabolite = 0;
-
-        for (int f = 0; f < xmlList.size(); f++) {
-            InputStream xmlStream = new FileInputStream(xmlList.get(f));
-            PCCompounds dbUnmarshal = unmarshal(xmlStream, PCCompounds.class);
-            System.out.println(dbUnmarshal.getPCCompound().size());
-            int nCompound = dbUnmarshal.getPCCompound().size();
-
-            for (int i = 0; i < nCompound; i++) {
-                PCCompound pcCompound = dbUnmarshal.getPCCompound().get(i);
-                BigInteger id = pcCompound.getPCCompound_Id().getPCCompoundType().getPCCompoundType_Id().getPCCompoundType_Id_Cid();
-                String acc = String.valueOf(id);
-                String chemical_formula = "-";
-                String IUPACName = "-";
-                double mass = -1;
-                List<PCInfoData> pcInfoDataList = pcCompound.getPCCompound_Props().getPCInfoData();
-                for (int k = 0; k < pcInfoDataList.size(); k++) {
-                    PCInfoData pcInfoData = pcInfoDataList.get(k);
-                    String label = pcInfoData.getPCInfoData_Urn().getPCUrn().getPCUrn_Label();
-                    if (label.equalsIgnoreCase("Mass")) {
-                        mass = pcInfoData.getPCInfoData_Value().getPCInfoData_Value_Fval();
-                    } else if (label.equalsIgnoreCase("Molecular Formula")) {
-                        chemical_formula = pcInfoData.getPCInfoData_Value().getPCInfoData_Value_Sval();
-                    } else if (label.equalsIgnoreCase("IUPAC Name") && pcInfoData.getPCInfoData_Urn().getPCUrn().getPCUrn_Name().equalsIgnoreCase("Preferred")) {
-                        IUPACName = pcInfoData.getPCInfoData_Value().getPCInfoData_Value_Sval();
-                    }
-
-
-                }
-                //System.out.println(acc + "\t" + IUPACName + "\t" + mass + "\t" + chemical_formula);
-                Metabolite metabolite = new Metabolite(acc, mass);
-                metabolite.name = IUPACName;
-                total_metabolite++;
-                total_valid_metabolite++;
-                massDB.add(metabolite);
-            }
-        }
-
-        System.out.println("total metabolites: " + total_metabolite);
-        System.out.println("total valid metabolites: " + total_valid_metabolite);
-        System.out.println();
-
-        //排序，从小到大
-        /**
-         * 获得对应mz比较的时候的下界索引
-         */
-
-        Collections.sort(massDB, comparator);
-        int maxMass = (int) Math.ceil(massDB.get(massDB.size() - 1).monisotopic_moleculate_weight + 1);
-        for (int i = 0; i < massDB.size(); i++) {
-            //System.out.println(massDB.get(i));
-            //把没一个质量的最小整形化后的ID记住
-            int minMass = IntegerMass(massDB.get(i).monisotopic_moleculate_weight);
-
-            //这里可能有多个代谢物的质量比较相近，只取最靠前的index保留
-            if (!mass2index.containsKey(minMass)) {
-                mass2index.put(minMass, i);
-            }
-
-
-        }
-
-        System.out.println("max mass in database " + maxMass);
-        //对1到maxMass里的每一个整数进行遍历，看起是否在mass2index里存在了，如果没有存在，就用左边最小的index填充
-        int lastIndex = 0;
-        for (int i = 1; i <= maxMass; i++) {
-            if (!mass2index.containsKey(i)) {
-                mass2index.put(i, lastIndex);
-            } else {
-                lastIndex = mass2index.get(i);
-            }
-        }
-
-        /**
-         * 获得对应mz比较的时候的上界索引
-         */
-        for (int i = massDB.size() - 1; i >= 0; i--) {
-            //System.out.println(massDB.get(i));
-            //把没一个质量的最小整形化后的ID记住
-            int minMass = IntegerMassUp(massDB.get(i).monisotopic_moleculate_weight);
-
-            //这里可能有多个代谢物的质量比较相近，只取最靠前的index保留
-            if (!mass2indexUp.containsKey(minMass)) {
-                mass2indexUp.put(minMass, i);
-            }
-
-
-        }
-        //对1到maxMass里的每一个整数进行遍历，看起是否在mass2index里存在了，如果没有存在，就用左边最小的index填充
-        lastIndex = massDB.size() - 1;
-        //System.out.println("max mass in database "+maxMass);
-        for (int i = maxMass; i >= 1; i--) {
-            if (!mass2indexUp.containsKey(i)) {
-                mass2indexUp.put(i, lastIndex);
-
-            } else {
-                lastIndex = mass2indexUp.get(i);
-            }
-        }
 
 		/*//检查算法
 		for(int i=0;i<massDB.size();i++){
 			int index = IntegerMassForSearch(massDB.get(i).monisotopic_moleculate_weight);
 			System.out.println(i+"\t"+massDB.get(i).monisotopic_moleculate_weight+"\t"+mass2index.get(index)+"\t"+mass2indexUp.get(index));
 		}*/
-
-
-    }
 
 
     /**
