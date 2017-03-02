@@ -163,39 +163,38 @@ public class MetaboIdent {
                 identify(mzfile, delta, unit, outfile, adductGear);
             }
         } else if(idFlow == 2){
-            if (cmd.hasOption("i2")  && cmd.hasOption("db2Type")) {
+            String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
+            String tmpMetFragDBType = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_TYPE());
+            String tmpMetFragDBPath = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_PATH());
+
+            if (tmpInputFile != null  && tmpMetFragDBPath != null && tmpMetFragDBType != null) {
                 MetFragParaList metFragParalist = new MetFragParaList();
-                if (Integer.valueOf(cmd.getOptionValue("db2Type")) == 1) {
+                if (Integer.valueOf(tmpMetFragDBType) == 1) {
                     metFragParalist.setMetFragDatabaseType("LocalPSV");
-                }
-                if (Integer.valueOf(cmd.getOptionValue("db2Type")) == 2) {
+                    metFragParalist.setLocalDatabasePath(tmpMetFragDBPath);
+                }else if (Integer.valueOf(tmpMetFragDBType) == 2) {
                     metFragParalist.setMetFragDatabaseType("LocalSDF");
-                }
-                if (Integer.valueOf(cmd.getOptionValue("db2Type")) == 3) {
+                    String tmpDB2 = TransformSDF.breakInChIKey(tmpMetFragDBPath).toString();
+                    metFragParalist.setLocalDatabasePath(tmpDB2);
+                }else if (Integer.valueOf(tmpMetFragDBType) == 3) {
                     metFragParalist.setMetFragDatabaseType("PubChem");
+                }else {
+                    logger.warning("Illegal parameter--- MetFrag_Database_Type");
                 }
-                if (cmd.hasOption("db2")) {
-                    if (Integer.valueOf(cmd.getOptionValue("db2Type")) == 2) {
-                        String tmpDB2 = TransformSDF.breakInChIKey(cmd.getOptionValue("db2")).toString();
-                        metFragParalist.setLocalDatabasePath(tmpDB2);
-                    }
-                    if (Integer.valueOf(cmd.getOptionValue("db2Type")) == 1){
-                        metFragParalist.setLocalDatabasePath(cmd.getOptionValue("db2"));
-                    }
-                }
-                //Adduct format: -a [M] -a [M+H] -a [M-H]
+
+                //Adduct format: -a [M] -a [M+H] -a [M-H] (old)
                 String[] adductArray;
-                if (cmd.hasOption("a")){
-                    adductArray = cmd.getOptionValues("a");
+                String tmpAdductType = SoftwareProperties.getPropertiesPair().get(PropertyName.getADDUCT_TYPE());
+                if (tmpAdductType != null){
+                    adductArray = tmpAdductType.split(",");
                 }else {
                     adductArray = new String[1];
                     adductArray[0] = "[M+H]";
                 }
 
-                String mz2List = cmd.getOptionValue("i2");
-                PostXCMSflow.ms2idMFrag(mz2List, metFragParalist, adductArray);
+                PostXCMSflow.ms2idMFrag(tmpInputFile, metFragParalist, adductArray);
             }else {
-                logger.warning("Lack of parameters__ -i2, -db2Type, -db2(offline)");
+                logger.warning("Lack of parameters__ InputFilePath, MetFragDatabasePath(offline), MetFragDatabaseType");
             }
         } else if (idFlow == 3) {
             String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
