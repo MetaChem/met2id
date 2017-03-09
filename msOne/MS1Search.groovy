@@ -1,8 +1,7 @@
 package msOne
 
-import spectralref.MathTool
-import spectralref.MetaboliteRef
-import spectralref.MetaboliteSpectralMatch
+import spectraRef.MathTool
+import spectraRef.MetaboliteDBRef
 
 /**
  * Created by Thin123 on 2017/1/17.
@@ -14,11 +13,11 @@ class MS1Search {
     //Leave out the first line--- head of the table
     static Map loadPSVDatabase(String databaseFile, String delimiter = "\\|",Integer num = 0){
         BufferedReader br = new BufferedReader(new FileReader(databaseFile))
-        Map<Double, ArrayList<MetaboliteRef>> databaseHash = new HashMap<>()
+        Map<Double, ArrayList<MetaboliteDBRef>> databaseHash = new HashMap<>()
         br.eachLine {line, lineNum ->
             if (lineNum==1) return
             String[] infoBlock = line.split(delimiter)
-            MetaboliteRef tmpRef = new MetaboliteRef()
+            MetaboliteDBRef tmpRef = new MetaboliteDBRef()
             tmpRef.parentMass = Double.valueOf(infoBlock[0])
             tmpRef.name = infoBlock[2]
             tmpRef.inchi = infoBlock[1]
@@ -26,7 +25,7 @@ class MS1Search {
             tmpRef.metInfo = line
 
             if (!databaseHash.containsKey(tmpRef.parentMass)){
-                ArrayList<MetaboliteRef> tmpMetaboliteAL = new ArrayList<>()
+                ArrayList<MetaboliteDBRef> tmpMetaboliteAL = new ArrayList<>()
                 tmpMetaboliteAL.push(tmpRef)
                 databaseHash.put(Double.valueOf(infoBlock[num]), tmpMetaboliteAL)
             }else {
@@ -37,12 +36,12 @@ class MS1Search {
         return databaseHash
     }
 
-    static ArrayList<MetaboliteMS1Match> searchMS1DBmass(Double queryMZ, Double tolppm, Map<Double, ArrayList<MetaboliteRef>> ms1DB){
+    static ArrayList<MetaboliteMS1Match> searchMS1DBmass(Double queryMZ, Double tolppm, Map<Double, ArrayList<MetaboliteDBRef>> ms1DB){
         ArrayList<MetaboliteMS1Match> matchMetaSet = new ArrayList<>()
         for(Double tmpKey:ms1DB.keySet()){
             if (MathTool.wPPMtol(queryMZ, tmpKey, tolppm)) {
                 ms1DB.get(tmpKey).each {
-                    matchMetaSet.push(new MetaboliteMS1Match(it, queryMZ - tmpKey, MathTool.massErrorScore(queryMZ, tmpKey, tolppm)))
+                    matchMetaSet.push(new MetaboliteMS1Match(it, ((queryMZ - tmpKey)/tmpKey) * 1000000, MathTool.massErrorScore(queryMZ, tmpKey, tolppm)))
                 }
             }
         }

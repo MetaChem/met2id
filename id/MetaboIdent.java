@@ -15,9 +15,10 @@ import java.util.regex.Pattern;
 import assemble.ResultAss;
 import db.TransformSDF;
 import isotope.IsotopeCal;
+import metaboEntity.MatchPeak;
+import metaboEntity.Peak;
 import property.PropertyName;
 import property.SoftwareProperties;
-import rawData.MzXMLflow;
 import metFrag.MetFragParaList;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -27,7 +28,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang3.StringUtils;
 
-import db.Metabolite;
+import metaboEntity.MetaboliteDB;
 import db.readMetaboDB;
 import org.xml.sax.SAXException;
 import rawData.PostXCMSflow;
@@ -45,29 +46,11 @@ public class MetaboIdent {
         options.addOption("p", true, "Gloabal property file path");
         options.addOption("s", false, "Sum up the output files");
         //multi-id method
-        options.addOption("f", true, "ID flow__1=MS1, 2=MetFrag, 3=SpectrumLib. Default is 1");
-        options.addOption("db2Type", true, "MS2 metabolites database type\n1=LocalPSV 2=LocalSDF 3=PubChem");
-        options.addOption("db2", true, "MS2 metabolites database path");
-        options.addOption("i2", true, "MS2 mzXml file path");
 
-        options.addOption("sLib", true, "Spectrum library path");
-
-        options.addOption("i", true, "mz file for metabolite identification");
-        options.addOption("o", true, "Output dir. Default is ./");
-        options.addOption("unit", true, "1:ppm,2:da. Default is ppm");
-        options.addOption("delta", true, "The delta for database searching. Default is 10 (ppm)");
-        options.addOption("db", true, "Metabolite database file");
-        options.addOption("dbType", true, "1=HMDB,2=PubChem,3=KEGG,4=MassBank,5=LipidMaps,6=PlantCyc");
-        options.addOption("mode", true, "1:positive, 2:negative");
-        options.addOption("prefix", true, "The prefix of output file");
-        options.addOption("pa", false, "Print the adducts");
-        options.addOption("a", true, "The index of adduct. Default: 1;7;9;12 ([M+H]+,[M+Na]+,[M+K]+,[M+NH4]+)");
         options.addOption("h", false, "Help");
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
-
-        SoftwareProperties.readPropFromFile(cmd.getOptionValue("p"));
 
         if (cmd.hasOption("h") || cmd.hasOption("help") || args.length == 0) {
             HelpFormatter f = new HelpFormatter();
@@ -77,95 +60,38 @@ public class MetaboIdent {
             System.exit(0);
         }
 
+        if (cmd.hasOption("p")) {
+            SoftwareProperties.readPropFromFile(cmd.getOptionValue("p"));
+        }
         Logger logger = Logger.getLogger(MetaboIdent.class.getName());
 
         Integer idFlow = 1;
         if (SoftwareProperties.getPropertiesPair().get(PropertyName.getID_WORKFLOW()) != null){
             idFlow = Integer.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getID_WORKFLOW()));
         }else {
-            logger.info("Set the id_workflow in the global property file");
+            logger.info("Set the id_workflow in the global property file, the default is 1");
         }
 
         if (idFlow == 1) {
-            int dbType = 1;
-            if (cmd.hasOption("dbType")) {
-                dbType = Integer.valueOf(cmd.getOptionValue("dbType"));
+            String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
+            String tmpMS1DB = SoftwareProperties.getPropertiesPair().get(PropertyName.getMS1_DB_PATH());
+            Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
+
+            String[] adductArray;
+            String tmpAdductType = SoftwareProperties.getPropertiesPair().get(PropertyName.getADDUCT_TYPE());
+            if (tmpAdductType != null){
+                adductArray = tmpAdductType.split(",");
+            }else {
+                adductArray = new String[1];
+                adductArray[0] = "[M+H]";
             }
 
-            int mode = 1;
-            if (cmd.hasOption("mode")) {
-                mode = Integer.valueOf(cmd.getOptionValue("mode"));
-            }
-            if (cmd.hasOption("pa")) {
-                AdductGear adductGear = new AdductGear();
-                adductGear.printAdducts(mode);
-                System.exit(0);
-            }
-
-            if (cmd.hasOption("db")) {
-                String db = cmd.getOptionValue("db");
-                if (dbType == 1) {
-                    readMetaboDB.readHMDBFromXMLs(db);
-                } else if (dbType == 2) {
-                } else if (dbType == 3) {
-                    readMetaboDB.readKEGG(db);
-                } else if (dbType == 4) {
-                    readMetaboDB.readMassBank(db);
-                } else if (dbType == 5) {
-                    readMetaboDB.readLipidMaps(db);
-                } else if (dbType == 6) {
-                    readMetaboDB.readPlantCyc(db);
-                }
-
-            }
-
-            //误差
-            int unit = 1;
-            double delta = 10;
-            if (cmd.hasOption("unit")) {
-                unit = Integer.valueOf(cmd.getOptionValue("unit"));
-                if (unit != 1 && unit != 2) {
-                    System.out.println("Please provide valid unit for delta!");
-                    System.exit(0);
-                }
-            }
-
-            if (cmd.hasOption("delta")) {
-                delta = Double.valueOf(cmd.getOptionValue("delta"));
-            }
-
-            //输出
-            String outdir = "./";
-            if (cmd.hasOption("o")) {
-                outdir = cmd.getOptionValue("o");
-                File dirFile = new File(outdir);
-                if (!dirFile.isDirectory()) {
-                    dirFile.mkdirs();
-                }
-            }
-            String prefix = "MetaboliteIdentify";
-            if (cmd.hasOption("prefix")) {
-                prefix = cmd.getOptionValue("prefix");
-            }
-
-            //加合物
-            String adductStr = "1;7;9;12"; //([M+H]+,[M+Na]+,[M+K]+,[M+NH4]+)
-            if (cmd.hasOption("a")) {
-                adductStr = cmd.getOptionValue("a");
-            }
-            AdductGear adductGear = new AdductGear();
-            adductGear.initialize(mode, adductStr);
-
-
-            if (cmd.hasOption("i")) {
-                String mzfile = cmd.getOptionValue("i");
-                String outfile = outdir + "/" + prefix + "-identify.txt";
-                identify(mzfile, delta, unit, outfile, adductGear);
-            }
+            PostXCMSflow.ms1idSearch(tmpInputFile, tmpMS1DB, adductArray, tmpTolerance);
         } else if(idFlow == 2){
             String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
             String tmpMetFragDBType = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_TYPE());
             String tmpMetFragDBPath = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_PATH());
+            Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
 
             if (tmpInputFile != null  && tmpMetFragDBPath != null && tmpMetFragDBType != null) {
                 MetFragParaList metFragParalist = new MetFragParaList();
@@ -192,7 +118,7 @@ public class MetaboIdent {
                     adductArray[0] = "[M+H]";
                 }
 
-                PostXCMSflow.ms2idMFrag(tmpInputFile, metFragParalist, adductArray);
+                PostXCMSflow.ms2idMFrag(tmpInputFile, metFragParalist, adductArray, tmpTolerance);
             }else {
                 logger.warning("Lack of parameters__ InputFilePath, MetFragDatabasePath(offline), MetFragDatabaseType");
             }
@@ -204,6 +130,12 @@ public class MetaboIdent {
             }else {
                 logger.warning("Lack of parameters__-i2, -sLib");
             }
+        } else if (idFlow == 4) {
+            String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
+            String tmpQueryFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getMS2ANALYZER_Q_PATH());
+            Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
+
+            PostXCMSflow.ms2AnalyzerAnnotate(tmpInputFile, tmpQueryFile, tmpTolerance);
         }
 
         if (cmd.hasOption("s")) {
@@ -342,7 +274,7 @@ public class MetaboIdent {
             //System.err.println(mz);
 
             peak.charge = charge;
-            ArrayList<MatchMetabolite> result = new ArrayList<MatchMetabolite>();
+            ArrayList<MatchPeak> result = new ArrayList<MatchPeak>();
             if (headMap.containsKey("mass") && p.matcher(d[headMap.get("mass")]).find()) {
                 double mass = Double.valueOf(d[headMap.get("mass")]);
                 peak.mass = mass;
@@ -351,9 +283,9 @@ public class MetaboIdent {
                 //如果包含加合物的信息
                 if (peak.adducts.size() >= 1) {
                     for (Adduct adduct : peak.adducts) {
-                        ArrayList<MatchMetabolite> res = searchDB(adduct.mass, delta, unit, isoFlag, peak);
-                        for (MatchMetabolite matchMetabolite : res) {
-                            matchMetabolite.adduct = adduct;
+                        ArrayList<MatchPeak> res = searchDB(adduct.mass, delta, unit, isoFlag, peak);
+                        for (MatchPeak matchPeak : res) {
+                            matchPeak.adduct = adduct;
                         }
                         result.addAll(res);
                     }
@@ -368,9 +300,9 @@ public class MetaboIdent {
                             //计算质量
                             //[2M+H+K]2+,需要考虑这里的2M的2
                             double caclMass = (peak.mz * Math.abs(adduct.charge) - adduct.massdiff) / adduct.nmol;
-                            ArrayList<MatchMetabolite> res = searchDB(caclMass, delta, unit, isoFlag, peak);
-                            for (MatchMetabolite matchMetabolite : res) {
-                                matchMetabolite.adduct = adduct;
+                            ArrayList<MatchPeak> res = searchDB(caclMass, delta, unit, isoFlag, peak);
+                            for (MatchPeak matchPeak : res) {
+                                matchPeak.adduct = adduct;
                             }
                             result.addAll(res);
                         }
@@ -383,9 +315,9 @@ public class MetaboIdent {
                                 //计算质量
                                 //[2M+H+K]2+,需要考虑这里的2M的2
                                 double caclMass = (peak.mz * Math.abs(adduct.charge) - adduct.massdiff) / adduct.nmol;
-                                ArrayList<MatchMetabolite> res = searchDB(caclMass, delta, unit, isoFlag, peak);
-                                for (MatchMetabolite matchMetabolite : res) {
-                                    matchMetabolite.adduct = adduct;
+                                ArrayList<MatchPeak> res = searchDB(caclMass, delta, unit, isoFlag, peak);
+                                for (MatchPeak matchPeak : res) {
+                                    matchPeak.adduct = adduct;
                                 }
                                 result.addAll(res);
                                 //if(174.9923434==mz){
@@ -404,7 +336,7 @@ public class MetaboIdent {
 
             if (result.size() >= 1) {
                 total_identify_mz++;
-                for (MatchMetabolite matchMetabolite : result) {
+                for (MatchPeak matchPeak : result) {
                     ArrayList<String> outList = new ArrayList<String>();
 
                     if (outHeader == false) outHeadList.add("ID");
@@ -421,65 +353,65 @@ public class MetaboIdent {
 
                     if (outHeader == false && isoFlag == true) outHeadList.add("isoSimilirityScore");
                     if (isoFlag == true) {
-                        if (matchMetabolite.iso_similirity_score != null){
-                            outList.add(matchMetabolite.iso_similirity_score.toString());
+                        if (matchPeak.iso_similirity_score != null){
+                            outList.add(matchPeak.iso_similirity_score.toString());
                         }else {
                             outList.add("NA");
                         }
                     }
 
                     if (outHeader == false) outHeadList.add("accession");
-                    outList.add(matchMetabolite.metabolite.accession);
+                    outList.add(matchPeak.metaboliteDB.accession);
 
                     if (outHeader == false) outHeadList.add("name");
-                    outList.add(matchMetabolite.metabolite.name);
+                    outList.add(matchPeak.metaboliteDB.name);
 
                     if (outHeader == false) outHeadList.add("expMass");
-                    outList.add(String.valueOf(matchMetabolite.expMass));
+                    outList.add(String.valueOf(matchPeak.expMass));
                     if (outHeader == false) outHeadList.add("calcMass");
-                    outList.add(String.valueOf(matchMetabolite.metabolite.monisotopic_moleculate_weight));
+                    outList.add(String.valueOf(matchPeak.metaboliteDB.monisotopic_moleculate_weight));
                     if (outHeader == false) outHeadList.add("delta");
-                    outList.add(String.valueOf(matchMetabolite.delta));
+                    outList.add(String.valueOf(matchPeak.delta));
 
                     if (outHeader == false) outHeadList.add("adduct");
                     if (outHeader == false) outHeadList.add("adductFromExp");
                     if (outHeader == false) outHeadList.add("charge");
-                    if (matchMetabolite.adduct != null) {
-                        outList.add(matchMetabolite.adduct.label);
-                        outList.add(String.valueOf(matchMetabolite.adduct.fromExp));
-                        outList.add(String.valueOf(matchMetabolite.adduct.charge));
+                    if (matchPeak.adduct != null) {
+                        outList.add(matchPeak.adduct.label);
+                        outList.add(String.valueOf(matchPeak.adduct.fromExp));
+                        outList.add(String.valueOf(matchPeak.adduct.charge));
                     } else {
                         outList.add("-");
                         outList.add("-");
                         outList.add(String.valueOf(peak.charge));
                     }
 
-                    if (outHeader == false && matchMetabolite.metabolite.chemical_formula != null) {
+                    if (outHeader == false && matchPeak.metaboliteDB.chemical_formula != null) {
                         outHeadList.add("chemical_formula");
                     }
-                    if (matchMetabolite.metabolite.chemical_formula != null) {
-                        outList.add(matchMetabolite.metabolite.chemical_formula);
+                    if (matchPeak.metaboliteDB.chemical_formula != null) {
+                        outList.add(matchPeak.metaboliteDB.chemical_formula);
                     }
 
-                    if (outHeader == false && matchMetabolite.metabolite.biofluid_locations != null) {
+                    if (outHeader == false && matchPeak.metaboliteDB.biofluid_locations != null) {
                         outHeadList.add("biofluid_locations");
                     }
-                    if (matchMetabolite.metabolite.biofluid_locations != null) {
-                        outList.add(matchMetabolite.metabolite.biofluid_locations);
+                    if (matchPeak.metaboliteDB.biofluid_locations != null) {
+                        outList.add(matchPeak.metaboliteDB.biofluid_locations);
                     }
 
-                    if (outHeader == false && matchMetabolite.metabolite.tissue_locations != null) {
+                    if (outHeader == false && matchPeak.metaboliteDB.tissue_locations != null) {
                         outHeadList.add("tissue_locations");
                     }
-                    if (matchMetabolite.metabolite.tissue_locations != null) {
-                        outList.add(matchMetabolite.metabolite.tissue_locations);
+                    if (matchPeak.metaboliteDB.tissue_locations != null) {
+                        outList.add(matchPeak.metaboliteDB.tissue_locations);
                     }
 
-                    if (outHeader == false && matchMetabolite.metabolite.pathways != null) {
+                    if (outHeader == false && matchPeak.metaboliteDB.pathways != null) {
                         outHeadList.add("pathways");
                     }
-                    if (matchMetabolite.metabolite.pathways != null) {
-                        outList.add(matchMetabolite.metabolite.pathways);
+                    if (matchPeak.metaboliteDB.pathways != null) {
+                        outList.add(matchPeak.metaboliteDB.pathways);
                     }
 
                     if (outHeader == false) {
@@ -511,9 +443,9 @@ public class MetaboIdent {
      * @return
      * @throws IOException
      */
-    public static ArrayList<MatchMetabolite> searchDB(double mass, double delta, int unit, boolean isoFlag, Peak peak) throws IOException {
+    public static ArrayList<MatchPeak> searchDB(double mass, double delta, int unit, boolean isoFlag, Peak peak) throws IOException {
 
-        ArrayList<MatchMetabolite> result = new ArrayList<MatchMetabolite>();
+        ArrayList<MatchPeak> result = new ArrayList<MatchPeak>();
 
         //int total_db_entry = readMetaboDB.massDB.size();
 
@@ -529,10 +461,10 @@ public class MetaboIdent {
             if (indMax > (readMetaboDB.massDB.size() - 1)) {
                 continue;
             }
-            Metabolite metabolite = readMetaboDB.massDB.get(i);
-            double mdel = mass - metabolite.monisotopic_moleculate_weight;
+            MetaboliteDB metaboliteDB = readMetaboDB.massDB.get(i);
+            double mdel = mass - metaboliteDB.monisotopic_moleculate_weight;
             if (unit == 1) {
-                mdel = mdel / metabolite.monisotopic_moleculate_weight * 1000000;
+                mdel = mdel / metaboliteDB.monisotopic_moleculate_weight * 1000000;
             }
             //System.err.println(mass);
             //if(mass==326.193958892584){
@@ -540,20 +472,20 @@ public class MetaboIdent {
             //}
             if (Math.abs(mdel) <= delta) {
                 //匹配上了
-                MatchMetabolite matchMetabolite = new MatchMetabolite();
-                matchMetabolite.metabolite = metabolite;
-                matchMetabolite.delta = mdel;
-                matchMetabolite.expMass = mass;
+                MatchPeak matchPeak = new MatchPeak();
+                matchPeak.metaboliteDB = metaboliteDB;
+                matchPeak.delta = mdel;
+                matchPeak.expMass = mass;
                 //Calculate isotope distribution similarity
                 if (isoFlag){
-                    matchMetabolite.isotope_distribution = matchMetabolite.parse_distribution(peak.ori_mz_dist, peak.ori_intensity_dist);
-                    matchMetabolite.iso_similirity_score = IsotopeCal.isoDiffScore(metabolite.chemical_formula,
-                            matchMetabolite.isotope_distribution, 0.1);
+                    matchPeak.isotope_distribution = matchPeak.parse_distribution(peak.ori_mz_dist, peak.ori_intensity_dist);
+                    matchPeak.iso_similirity_score = IsotopeCal.isoDiffScore(metaboliteDB.chemical_formula,
+                            matchPeak.isotope_distribution, 0.1);
                 }
 
-                result.add(matchMetabolite);
-                //System.out.println(peak.mz+"\t"+metabolite.monisotopic_moleculate_weight+"\t"+metabolite.accession+"\t"+mdel);
-                //bw.write(peak.mz+"\t"+metabolite.monisotopic_moleculate_weight+"\t"+metabolite.accession+"\t"+mdel+"\n");
+                result.add(matchPeak);
+                //System.out.println(peak.mz+"\t"+metaboliteDB.monisotopic_moleculate_weight+"\t"+metaboliteDB.accession+"\t"+mdel);
+                //bw.write(peak.mz+"\t"+metaboliteDB.monisotopic_moleculate_weight+"\t"+metaboliteDB.accession+"\t"+mdel+"\n");
                 //isIdentify = true;
             }
         }

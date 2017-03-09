@@ -7,19 +7,21 @@ import de.ipbhalle.metfraglib.process.CombinedMetFragProcess
 import de.ipbhalle.metfraglib.settings.MetFragGlobalSettings
 import metFrag.MetFragGear
 import metFrag.MetFragParaList
+import metaboEntity.PeakPair
+import metaboEntity.Spectrum
+import ms2Analyzer.MatchPeakPair_ms2Ana
+import ms2Analyzer.QueryFile
 import msOne.MS1Search
-import spectralref.MetaboliteRef
-import spectralref.SearchRefLib
-import uk.ac.ebi.pride.tools.jmzreader.model.Spectrum
-import uk.ac.ebi.pride.tools.mzxml_parser.MzXMLFile
-import uk.ac.ebi.pride.tools.mzxml_parser.MzXMLSpectrum
-import uk.ac.ebi.pride.tools.mzxml_parser.mzxml.model.Scan
+import spectraRef.MetaboliteDBRef
+import spectraRef.SearchRefLib
 
 /**
  * Created by Thin123 on 2017/1/16.
  */
 class PostXCMSflow {
-    static void ms2idMFrag (String tmpXCMS, MetFragParaList tempParalist, String[] adductArray){
+
+    //@tol  used in the ms1Search(without ms2)
+    static void ms2idMFrag (String tmpXCMS, MetFragParaList tempParalist, String[] adductArray, Double tol){
         def tempTest = new MetFragGear()
         File paraDir = new File("para-tmp")
         File resultDir = new File("result-mfrag-tmp")
@@ -34,7 +36,7 @@ class PostXCMSflow {
         resultDir.mkdir()
 
         MetFragGlobalSettings settings = tempTest.setMetFragGloabalSettings(tempParalist)
-        CombinedMetFragProcess mp = new CombinedMetFragProcess(settings)
+        CombinedMetFragProcess mp = new CombinedMetFragProcess(settings)    //initialise database
 
         BufferedReader br = new BufferedReader(new FileReader(tmpXCMS))
         Map<Integer, ArrayList<BigDecimal>> ID1Info = new HashMap<>()   //[0,1,2] RT, MZ, Intensity
@@ -44,8 +46,8 @@ class PostXCMSflow {
         String line
         Integer lastPID = 0 // ms2 parent peak id
         Integer thisPID = 0
-        BigInteger tempi = -1
-        Integer tempiR = 0
+        BigInteger tempi = -1   //file line count
+        Integer tempiR = 0  //ms1 peak count
 
         while ((line = br.readLine()) != null) {
             tempi++
@@ -58,7 +60,7 @@ class PostXCMSflow {
             if (tmpMSLevel == 1) {
                 def tmpInfo = [tmpline[3], tmpline[4], tmpline[5]].collect() { BigDecimal.valueOf(Double.valueOf(it)) }
                 tmpInfo[0] = (tmpInfo[0] / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
-                ID1Info.put(Integer.valueOf(tmpline[0]), tmpInfo)
+                ID1Info.put(Integer.valueOf(tmpline[0]), new ArrayList<BigDecimal>(tmpInfo))
                 ID1check.put(Integer.valueOf(tmpline[0]), 0)
             } else if (tmpMSLevel == 2) {
                 thisPID = Integer.valueOf(tmpline[1])
@@ -139,9 +141,9 @@ class PostXCMSflow {
             }
         }
 
-        Map<Double, ArrayList<MetaboliteRef>> ms1DB = MS1Search.loadPSVDatabase(tempParalist.LocalDatabasePath)
-        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-mfrag-tmp","0-result-ms1")))
-        bw << "RT(min),precursorMZ,Intensity,MassError(Da),MS1Score,Lib_Mass,Lib_Name,Lib_InChI\n"
+        Map<Double, ArrayList<MetaboliteDBRef>> ms1DB = MS1Search.loadPSVDatabase(tempParalist.LocalDatabasePath)
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-mfrag-tmp","0-result-ms1_woms2")))
+        bw << "RT(min),precursorMZ,Intensity,MassError(ppm),MS1Score,Lib_Mass,Lib_Name,Lib_InChI\n"
         for (Integer tmpID: ID1check.keySet()){
             if (ID1check.get(tmpID) == 0) {
                 for (def tempAdduct : adductArray) {
@@ -150,7 +152,7 @@ class PostXCMSflow {
                     AdductRaw adductRaw = new AdductRaw(ID1Info.get(tmpID).get(1), tempAdduct)
                     Double tempNeutralMass = adductRaw.getNeuralMass()
 
-                    ArrayList ms1Array = MS1Search.searchMS1DBmass(tempNeutralMass, 10, ms1DB)
+                    ArrayList ms1Array = MS1Search.searchMS1DBmass(tempNeutralMass, tol, ms1DB)
                     MS1Search.writeMS1Result(bw, peakInfoBar, ms1Array)
                 }
             }
@@ -196,7 +198,7 @@ class PostXCMSflow {
             if (tmpMSLevel == 1) {
                 def tmpInfo = [tmpline[3], tmpline[4], tmpline[5]].collect() { BigDecimal.valueOf(Double.valueOf(it)) }
                 tmpInfo[0] = (tmpInfo[1] / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
-                ID1Info.put(Integer.valueOf(tmpline[0]), tmpInfo)
+                ID1Info.put(Integer.valueOf(tmpline[0]), new ArrayList<BigDecimal>(tmpInfo))
             } else if (tmpMSLevel == 2) {
                 thisPID = Integer.valueOf(tmpline[1])
                 if (thisPID != 0 && (lastPID == 0 || thisPID == lastPID)) {
@@ -250,5 +252,72 @@ class PostXCMSflow {
             SearchRefLib.writeResultSumup(bwSum, peakInfoBar, ms2Array)
         }
         bwSum.close()
+    }
+
+    //include isotope filter?
+    static void ms1idSearch (String tmpXCMS, String ms1psvDB, String[] adductArray, Double tol){
+        File tmpInputFile = new File(tmpXCMS)
+        BufferedReader br = new BufferedReader(new FileReader(tmpInputFile))
+
+        File resultDir = new File("result-ms1-tmp")
+        if (resultDir.exists()){
+            resultDir.deleteDir()
+        }
+        resultDir.mkdir()
+
+        Map<Double, ArrayList<MetaboliteDBRef>> ms1DB = MS1Search.loadPSVDatabase(ms1psvDB)
+
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-ms1-tmp","0-result-ms1")))
+        bw << "RT(min),precursorMZ,Intensity,MassError(ppm),MS1Score,Lib_Mass,Lib_Name,Lib_InChI\n"
+
+        Integer tmpi = -1
+        br.eachLine {
+            tmpi++
+            if (tmpi == 0){
+                return
+            }
+            println("$tmpi")
+
+            String[] tmpline = it.split("\t")
+            Integer tmpMSlevel = Integer.valueOf(tmpline[2])
+            if (tmpMSlevel == 1) {
+                println("MS1 processing...")
+                BigDecimal tmpRT = (BigDecimal.valueOf(Double.valueOf(tmpline[3])) / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
+                BigDecimal tmpMZ = BigDecimal.valueOf(Double.valueOf(tmpline[4]))
+                BigDecimal tmpIntensity = BigDecimal.valueOf(Double.valueOf(tmpline[5]))
+                for (def tempAdduct : adductArray) {
+                    String peakInfoBar = "$tmpRT,$tmpMZ,$tmpIntensity,"
+
+                    AdductRaw adductRaw = new AdductRaw(tmpMZ, tempAdduct)
+                    Double tempNeutralMass = adductRaw.getNeuralMass()
+
+                    ArrayList ms1Array = MS1Search.searchMS1DBmass(tempNeutralMass, tol, ms1DB)
+                    MS1Search.writeMS1Result(bw, peakInfoBar, ms1Array)
+                }
+            }
+        }
+        br.close()
+        bw.close()
+    }
+
+    static void ms2AnalyzerAnnotate(String inputFile, String queryFile, Double tol){
+        QueryFile tmpQFile = new QueryFile()
+        tmpQFile.readQueryFile(queryFile)
+
+        Spectrum spectrum = InputFileRead.XCMSread(inputFile, true)
+        File tmpDir = new File("result-ms2Ana-tmp")
+        if (tmpDir.exists()){tmpDir.delete()}
+        tmpDir.mkdir()
+        File tmpFile = new File(tmpDir,"ms2AnaResult")
+        tmpFile.createNewFile()
+        BufferedWriter bw = new BufferedWriter(new FileWriter(tmpFile))
+
+        bw << "ID,RT,precursorMZ,precursorIntensity,QueryType,AnnotationName,AnnotationMZ\n"
+        for (PeakPair peakPair:spectrum.peakPairGroup.values()){
+            MatchPeakPair_ms2Ana matchPeakPair_ms2Ana = new MatchPeakPair_ms2Ana(peakPair)
+            matchPeakPair_ms2Ana.ms2analyzer(tmpQFile, tol)
+            bw << matchPeakPair_ms2Ana
+        }
+        bw.close()
     }
 }

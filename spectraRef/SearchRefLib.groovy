@@ -1,4 +1,4 @@
-package spectralref
+package spectraRef
 
 /**
  * Created by Thin123 on 2016/12/5.
@@ -30,11 +30,11 @@ class SearchRefLib {
         }
     }
 
-    static ArrayList<MetaboliteSpectralMatch> compareMGF(ArrayList<Double> matchKeySet, Map<Double, ArrayList<MetaboliteRef>> spectrumLib,
+    static ArrayList<MetaboliteSpectralMatch> compareMGF(ArrayList<Double> matchKeySet, Map<Double, ArrayList<MetaboliteDBRef>> spectrumLib,
                                                          Map<Double, Double> querySpectra, Double cutoff){
         ArrayList<MetaboliteSpectralMatch> matchMet = new ArrayList<>()
         for (Double tmpKey:matchKeySet){
-            for (MetaboliteRef tmpMet: spectrumLib.get(tmpKey)){
+            for (MetaboliteDBRef tmpMet: spectrumLib.get(tmpKey)){
                 Double tmpMS2Score = MathTool.similirityScore(querySpectra, tmpMet.spectrum, 0.3)   //tolerance
                 if (tmpMS2Score > cutoff) {
                     matchMet.push(new MetaboliteSpectralMatch(tmpMet, tmpMS2Score))
@@ -44,7 +44,7 @@ class SearchRefLib {
         return matchMet
     }
 
-    static ArrayList<Double> searchMS1mass(Double queryMZ, Double tolppm, Map<Double, ArrayList<MetaboliteRef>> spectrumLib){
+    static ArrayList<Double> searchMS1mass(Double queryMZ, Double tolppm, Map<Double, ArrayList<MetaboliteDBRef>> spectrumLib){
         ArrayList<Double> matchKeySet = new ArrayList<>()
         for(Double tmpKey:spectrumLib.keySet()){
             if (MathTool.wPPMtol(queryMZ, tmpKey, tolppm)) { matchKeySet.push(tmpKey) }
@@ -56,7 +56,7 @@ class SearchRefLib {
         BufferedReader br = new BufferedReader(new FileReader(mgfFile))
         String tmpS = ""
         String tmpInfo = ""
-        Map<Double, ArrayList<MetaboliteRef>> spectrumLib = new HashMap<>()
+        Map<Double, ArrayList<MetaboliteDBRef>> spectrumLib = new HashMap<>()
         Double parantIonMZ = 0
         String tmpname = ""
         String tmpInchi = ""
@@ -86,7 +86,7 @@ class SearchRefLib {
                 if (matchInfo5.find()) { tmpOrganism = matchInfo5[0][1] }
 
                 if (tmpS == "END IONS" && parantIonMZ > 0) {
-                    MetaboliteRef metaboliteRef = new MetaboliteRef()
+                    MetaboliteDBRef metaboliteRef = new MetaboliteDBRef()
                     metaboliteRef.parentMass = parantIonMZ
                     metaboliteRef.name = tmpname
                     metaboliteRef.inchi = tmpInchi
@@ -95,7 +95,7 @@ class SearchRefLib {
                     metaboliteRef.metInfo = tmpInfo
 
                     if (spectrumLib.get(metaboliteRef.parentMass) == null){
-                        ArrayList<MetaboliteRef> tmp = new ArrayList<>()
+                        ArrayList<MetaboliteDBRef> tmp = new ArrayList<>()
                         tmp.push(metaboliteRef)
                         spectrumLib.put(metaboliteRef.parentMass, tmp)
                     } else {

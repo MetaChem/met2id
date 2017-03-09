@@ -7,13 +7,11 @@ import de.ipbhalle.metfraglib.process.CombinedMetFragProcess
 import de.ipbhalle.metfraglib.settings.MetFragGlobalSettings
 import metFrag.MetFragGear
 import metFrag.MetFragParaList
-import spectralref.SearchRefLib
+import spectraRef.SearchRefLib
 import uk.ac.ebi.pride.tools.jmzreader.model.Spectrum
 import uk.ac.ebi.pride.tools.mzxml_parser.MzXMLFile
 import uk.ac.ebi.pride.tools.mzxml_parser.MzXMLSpectrum
 import uk.ac.ebi.pride.tools.mzxml_parser.mzxml.model.Scan
-
-import java.util.regex.Matcher
 
 /**
  * Created by Thin123 on 2016/11/16.

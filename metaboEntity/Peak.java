@@ -1,4 +1,6 @@
-package id;
+package metaboEntity;
+
+import id.Adduct;
 
 import java.util.ArrayList;
 

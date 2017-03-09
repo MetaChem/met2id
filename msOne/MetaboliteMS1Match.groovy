@@ -1,16 +1,16 @@
 package msOne
 
-import spectralref.MetaboliteRef
+import spectraRef.MetaboliteDBRef
 
 /**
  * Created by Thin123 on 2017/1/17.
  */
 class MetaboliteMS1Match {
-    Double massError
+    Double massError    //ppm
     Double ms1Score
-    MetaboliteRef metaboliteRef
+    MetaboliteDBRef metaboliteRef
 
-    MetaboliteMS1Match(MetaboliteRef tmpRef, Double tmpError, Double tmpScore){
+    MetaboliteMS1Match(MetaboliteDBRef tmpRef, Double tmpError, Double tmpScore){
         this.metaboliteRef = tmpRef
         this.massError = tmpError
         this.ms1Score = tmpScore

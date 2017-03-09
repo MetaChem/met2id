@@ -1,11 +1,11 @@
-package spectralref
+package spectraRef
 
-import db.Metabolite
+import metaboEntity.MetaboliteDB
 
 /**
  * Created by Thin123 on 2016/12/5.
  */
-class MetaboliteRef extends Metabolite {
+class MetaboliteDBRef extends MetaboliteDB {
     Double parentMass   //with adducts
     String name
     String formula
@@ -20,7 +20,7 @@ class MetaboliteRef extends Metabolite {
     TreeMap<Double, Double> spectrum    //default mzlist is from low to high
     String metInfo
 
-    MetaboliteRef(){}
+    MetaboliteDBRef(){}
 
     @Override
     String toString() {

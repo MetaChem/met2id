@@ -1,4 +1,4 @@
-package ms2ana
+package ms2Analyzer
 
 /**
  * Created by Thin123 on 2017/2/28.

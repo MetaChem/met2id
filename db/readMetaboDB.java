@@ -1,5 +1,6 @@
 package db;
 
+import metaboEntity.MetaboliteDB;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -9,7 +10,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,7 +24,7 @@ public class readMetaboDB {
     /**
      * 保存代谢物的质量，从小到大排序
      */
-    public static ArrayList<Metabolite> massDB = new ArrayList<Metabolite>();
+    public static ArrayList<MetaboliteDB> massDB = new ArrayList<MetaboliteDB>();
 
     /**
      * 保存对应mass经过整形化后的最小index
@@ -40,7 +40,7 @@ public class readMetaboDB {
      * @throws IOException
      */
     public static void readHMDB(String db) throws IOException {
-        System.out.println("read metabolite database " + db);
+        System.out.println("read metaboliteDB database " + db);
         BufferedReader br = new BufferedReader(new FileReader(new File(db)));
 
         String line = br.readLine();
@@ -69,22 +69,22 @@ public class readMetaboDB {
                 continue;
             }
 
-            Metabolite metabolite = new Metabolite(acc, mass);
-            metabolite.name = name;
+            MetaboliteDB metaboliteDB = new MetaboliteDB(acc, mass);
+            metaboliteDB.name = name;
             if (headMap.containsKey("chemical_formula")) {
-                metabolite.chemical_formula = d[headMap.get("chemical_formula")];
+                metaboliteDB.chemical_formula = d[headMap.get("chemical_formula")];
             }
             if (headMap.containsKey("pathways")) {
-                metabolite.pathways = d[headMap.get("pathways")];
+                metaboliteDB.pathways = d[headMap.get("pathways")];
             }
 
             if (headMap.containsKey("biofluid_locations")) {
-                metabolite.biofluid_locations = d[headMap.get("biofluid_locations")];
+                metaboliteDB.biofluid_locations = d[headMap.get("biofluid_locations")];
             }
             if (headMap.containsKey("tissue_locations")) {
-                metabolite.tissue_locations = d[headMap.get("tissue_locations")];
+                metaboliteDB.tissue_locations = d[headMap.get("tissue_locations")];
             }
-            massDB.add(metabolite);
+            massDB.add(metaboliteDB);
 
         }
         br.close();
@@ -169,7 +169,7 @@ public class readMetaboDB {
      * @throws SAXException
      */
     public static void readHMDBFromXMLs(String dbxml) throws IOException, ParserConfigurationException, SAXException {
-        System.out.println("read metabolite database " + dbxml);
+        System.out.println("read metaboliteDB database " + dbxml);
         File inFile = new File(dbxml);
         ArrayList<File> xmlList = new ArrayList<File>();
         if (inFile.isFile()) {
@@ -203,7 +203,7 @@ public class readMetaboDB {
             // step3: 解析一个xml文档，获得Document对象（根结点）
             Document document = db.parse(xmlList.get(f));
 
-            NodeList list = document.getElementsByTagName("metabolite");
+            NodeList list = document.getElementsByTagName("metaboliteDB");
             //System.out.println(list.getLength());
             ArrayList<String> header = new ArrayList<String>();
 
@@ -360,18 +360,18 @@ public class readMetaboDB {
                 } else {
                     continue;
                 }
-                Metabolite metabolite = new Metabolite(acc, mass);
-                metabolite.name = name;
+                MetaboliteDB metaboliteDB = new MetaboliteDB(acc, mass);
+                metaboliteDB.name = name;
 
-                metabolite.chemical_formula = chemical_formula;
+                metaboliteDB.chemical_formula = chemical_formula;
 
-                metabolite.pathways = pathways;
+                metaboliteDB.pathways = pathways;
 
-                metabolite.biofluid_locations = biofluid_locations;
+                metaboliteDB.biofluid_locations = biofluid_locations;
 
-                metabolite.tissue_locations = tissue_locations;
+                metaboliteDB.tissue_locations = tissue_locations;
 
-                massDB.add(metabolite);
+                massDB.add(metaboliteDB);
             }
         }
 
@@ -467,7 +467,7 @@ public class readMetaboDB {
      * @throws IOException
      */
     public static void readKEGG(String db) throws IOException {
-        System.out.println("read metabolite database " + db);
+        System.out.println("read metaboliteDB database " + db);
         BufferedReader br = new BufferedReader(new FileReader(new File(db)));
 
         int total_metabolite = 0;
@@ -501,10 +501,10 @@ public class readMetaboDB {
                     }
                 }
 
-                Metabolite metabolite = new Metabolite(acc, mass);
-                metabolite.name = name;
-                metabolite.chemical_formula = chemical_formula;
-                massDB.add(metabolite);
+                MetaboliteDB metaboliteDB = new MetaboliteDB(acc, mass);
+                metaboliteDB.name = name;
+                metaboliteDB.chemical_formula = chemical_formula;
+                massDB.add(metaboliteDB);
             }
         }
         System.out.println("total metabolites: " + total_metabolite);
@@ -586,7 +586,7 @@ public class readMetaboDB {
      * @throws IOException
      */
     public static void readMassBank(String dir) throws IOException {
-        System.out.println("read metabolite database " + dir);
+        System.out.println("read metaboliteDB database " + dir);
 
         File inFile = new File(dir);
         ArrayList<String> xmlList = new ArrayList<String>();// 并非xml格式文件，只是沿用了之前的模板
@@ -632,12 +632,12 @@ public class readMetaboDB {
                 }
 
             }
-            Metabolite metabolite = new Metabolite(acc, mass);
-            metabolite.name = name;
-            metabolite.chemical_formula = chemical_formula;
+            MetaboliteDB metaboliteDB = new MetaboliteDB(acc, mass);
+            metaboliteDB.name = name;
+            metaboliteDB.chemical_formula = chemical_formula;
             total_metabolite++;
             total_valid_metabolite++;
-            massDB.add(metabolite);
+            massDB.add(metaboliteDB);
             bufferedReader.close();
         }
 
@@ -721,7 +721,7 @@ public class readMetaboDB {
      * @throws IOException
      */
     public static void readLipidMaps(String db) throws IOException {
-        System.out.println("read metabolite database " + db);
+        System.out.println("read metaboliteDB database " + db);
         BufferedReader br = new BufferedReader(new FileReader(new File(db)));
 
         int total_metabolite = 0;
@@ -753,10 +753,10 @@ public class readMetaboDB {
                     }
                 }
 
-                Metabolite metabolite = new Metabolite(acc, mass);
-                metabolite.name = name;
-                metabolite.chemical_formula = chemical_formula;
-                massDB.add(metabolite);
+                MetaboliteDB metaboliteDB = new MetaboliteDB(acc, mass);
+                metaboliteDB.name = name;
+                metaboliteDB.chemical_formula = chemical_formula;
+                massDB.add(metaboliteDB);
             }
         }
         System.out.println("total metabolites: " + total_metabolite);
@@ -838,7 +838,7 @@ public class readMetaboDB {
      * @throws IOException
      */
     public static void readPlantCyc(String db) throws IOException {
-        System.out.println("read metabolite database " + db);
+        System.out.println("read metaboliteDB database " + db);
         BufferedReader br = new BufferedReader(new FileReader(new File(db)));
 
         int total_metabolite = 0;
@@ -910,10 +910,10 @@ public class readMetaboDB {
                 }
                 if (mass > 0) {
                     total_valid_metabolite++;
-                    Metabolite metabolite = new Metabolite(acc, mass);
-                    metabolite.name = name;
-                    metabolite.chemical_formula = chemical_formula;
-                    massDB.add(metabolite);
+                    MetaboliteDB metaboliteDB = new MetaboliteDB(acc, mass);
+                    metaboliteDB.name = name;
+                    metaboliteDB.chemical_formula = chemical_formula;
+                    massDB.add(metaboliteDB);
                 }
             }
         }
@@ -1016,8 +1016,8 @@ public class readMetaboDB {
     }
 
 
-    public static Comparator<Metabolite> comparator = new Comparator<Metabolite>() {
-        public int compare(Metabolite s1, Metabolite s2) {
+    public static Comparator<MetaboliteDB> comparator = new Comparator<MetaboliteDB>() {
+        public int compare(MetaboliteDB s1, MetaboliteDB s2) {
             if (s2.monisotopic_moleculate_weight > s1.monisotopic_moleculate_weight) {
                 return -1;
             } else if (s2.monisotopic_moleculate_weight == s1.monisotopic_moleculate_weight) {

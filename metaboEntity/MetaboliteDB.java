@@ -1,10 +1,10 @@
-package db;
+package metaboEntity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Metabolite {
+public class MetaboliteDB {
 
     public String accession;
     public String name;
@@ -18,18 +18,18 @@ public class Metabolite {
 
 
 
-    public Metabolite() {
+    public MetaboliteDB() {
 
     }
 
-    public Metabolite(String acc, String na, String des, double moniMass) {
+    public MetaboliteDB(String acc, String na, String des, double moniMass) {
         this.accession = acc;
         this.name = na;
         this.description = des;
         this.monisotopic_moleculate_weight = moniMass;
     }
 
-    public Metabolite(String acc, double moniMass) {
+    public MetaboliteDB(String acc, double moniMass) {
         this.accession = acc;
         this.monisotopic_moleculate_weight = moniMass;
     }

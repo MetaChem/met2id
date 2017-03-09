@@ -1,13 +1,13 @@
-package id;
+package metaboEntity;
 
-import db.Metabolite;
+import id.Adduct;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MatchMetabolite {
+public class MatchPeak {
 
-    public Metabolite metabolite;
+    public MetaboliteDB metaboliteDB;
     public double delta;
     public double expMass;
     public Adduct adduct = null;
@@ -15,7 +15,7 @@ public class MatchMetabolite {
     public Map<Double, Double> isotope_distribution;
     public Double iso_similirity_score;
 
-    public MatchMetabolite() {
+    public MatchPeak() {
 
     }
 

@@ -1,4 +1,4 @@
-package spectralref
+package spectraRef
 
 /**
  * Created by Thin123 on 2016/12/5.
@@ -10,12 +10,12 @@ class MathTool {
         return 100 - (((Math.abs(numA - numB)/numB * 1000000)/tolppm) * 10000).round()/100
     }
 
+    static Double calPPM(Double numA, Double numB){
+        return Math.abs(numA - numB)/numB * 1000000
+    }
+
     static Boolean wPPMtol(Double numA, Double numB, Double tolppm){
-        if ((Math.abs(numA - numB)/numB * 1000000) < tolppm){
-            return true
-        }else {
-            return false
-        }
+        return calPPM(numA, numB) <= tolppm
     }
 
     static Double similirityScore(Map<Double, Double> queryIntDist, Map<Double, Double> dbIntDist, Double tol) {

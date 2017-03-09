@@ -68,7 +68,7 @@ public class ParserHMDB {
         // step3: 解析一个xml文档，获得Document对象（根结点）  
         Document document = db.parse(f);
 
-        NodeList list = document.getElementsByTagName("metabolite");
+        NodeList list = document.getElementsByTagName("metaboliteDB");
         //System.out.println(list.getLength());
         ArrayList<String> header = new ArrayList<String>();
 

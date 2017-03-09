@@ -19,6 +19,8 @@ class SoftwareProperties {
 
         propertiesPair.put(PropertyName.METFRAG_DB_TYPE,null)
         propertiesPair.put(PropertyName.METFRAG_DB_PATH,null)
+
+        propertiesPair.put(PropertyName.MS2ANALYZER_Q_PATH,null)
     }
 
     static HashMap<String, String> readPropFromFile(String propFile){
