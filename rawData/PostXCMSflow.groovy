@@ -21,10 +21,10 @@ import spectraRef.SearchRefLib
 class PostXCMSflow {
 
     //@tol  used in the ms1Search(without ms2)
-    static void ms2idMFrag (String tmpXCMS, MetFragParaList tempParalist, String[] adductArray, Double tol){
+    static void ms2idMFrag (String proName, String tmpXCMS, MetFragParaList tempParalist, String[] adductArray, Double tol){
         def tempTest = new MetFragGear()
-        File paraDir = new File("para-tmp")
-        File resultDir = new File("result-mfrag-tmp")
+        File paraDir = new File("para-$proName")
+        File resultDir = new File("result-mfrag-$proName")
 
         if (paraDir.exists()){
             paraDir.deleteDir()
@@ -160,12 +160,13 @@ class PostXCMSflow {
         bw.close()
     }
 
-    static void ms2idSLib (String tmpXCMS, String spectrumLib, Double tol){
+    // ***FILE_FORMAT*** the ms2 peaks from the same spectra have been clustered and behind the parent ms1 peak ID
+    static void ms2idSLib (String proName, String tmpXCMS, String spectrumLib, Double tol){
         Map spLib = SearchRefLib.loadMGF(spectrumLib)
 
         File tempFile = new File(tmpXCMS)
 
-        File resultDir = new File("result-slib-tmp")
+        File resultDir = new File("result-slib-$proName")
         if (resultDir.exists()){
             resultDir.deleteDir()
         }
@@ -175,7 +176,7 @@ class PostXCMSflow {
         if (cResultFile.exists()){cResultFile.delete()}
         cResultFile.createNewFile()
         BufferedWriter bwSum = new BufferedWriter(new FileWriter(cResultFile))
-        bwSum << "RT(min),precursorMZ,LibComp_Score,Organism,Lib_Mass,Lib_Name,Lib_InChI\n"
+        bwSum << "ParentPeakID,RT(min),precursorMZ,LibComp_Score,Organism,Lib_Mass,Lib_Name,Lib_InChI\n"
 
         BufferedReader br = new BufferedReader(new FileReader(tempFile))
         Map<Integer, ArrayList<BigDecimal>> ID1Info = new HashMap<>()   //[0,1,2] RT, MZ, Intensity
@@ -196,6 +197,8 @@ class PostXCMSflow {
             println("$tempi")
             Integer tmpMSLevel = Integer.valueOf(tmpline[2])
             if (tmpMSLevel == 1) {
+                if (tmpline[3] == "NA") { tmpline[3] = "0" }
+                if (tmpline[5] == "NA") { tmpline[5] = "0" }
                 def tmpInfo = [tmpline[3], tmpline[4], tmpline[5]].collect() { BigDecimal.valueOf(Double.valueOf(it)) }
                 tmpInfo[0] = (tmpInfo[1] / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
                 ID1Info.put(Integer.valueOf(tmpline[0]), new ArrayList<BigDecimal>(tmpInfo))
@@ -205,7 +208,6 @@ class PostXCMSflow {
                     tempMz2List.put(Double.valueOf(tmpline[4]), Double.valueOf(tmpline[5]))
                 }
                 if (thisPID != 0 && lastPID != 0 && lastPID != thisPID) {
-                    tempMz2List.put(Double.valueOf(tmpline[4]), Double.valueOf(tmpline[5]))
                     tempiR++
 
                     Double retentionTime = ID1Info.get(lastPID).get(0)
@@ -214,9 +216,13 @@ class PostXCMSflow {
                     for (Double tmpKey : tempMz2List.keySet().sort()) {
                         treeMzList.put(tmpKey, tempMz2List.get(tmpKey))
                     }
+
+                    //put the processing ms2 line into the list
                     tempMz2List.clear()
-                    String peakInfo = "RetentionTime(min)=$retentionTime\nprecursorMZ=$precursorMz\nExperimental spectra peak list\n"
-                    String peakInfoBar = "$retentionTime,$precursorMz,"
+                    tempMz2List.put(Double.valueOf(tmpline[4]), Double.valueOf(tmpline[5]))
+
+                    String peakInfo = "ParentPeakID=$lastPID\nRetentionTime(min)=$retentionTime\nprecursorMZ=$precursorMz\nExperimental spectra peak list\n"
+                    String peakInfoBar = "$lastPID,$retentionTime,$precursorMz,"
                     for (Double tmpPeak:treeMzList.keySet()){ peakInfo += tmpPeak + "\t" + treeMzList.get(tmpPeak) + "\n"}
 
                     String resultPath = resultDir.toString() + "/result${tempiR}_${retentionTime}_${precursorMz}_"
@@ -240,7 +246,7 @@ class PostXCMSflow {
             for (Double tmpKey : tempMz2List.keySet().sort()) {
                 treeMzList.put(tmpKey, tempMz2List.get(tmpKey))
             }
-            String peakInfo = "RetentionTime(min)=$retentionTime\nprecursorMZ=$precursorMz\nExperimental spectra peak list\n"
+            String peakInfo = "ParentPeakID=$lastPID\nRetentionTime(min)=$retentionTime\nprecursorMZ=$precursorMz\nExperimental spectra peak list\n"
             String peakInfoBar = "$retentionTime,$precursorMz,"
             for (Double tmpPeak:treeMzList.keySet()){ peakInfo += tmpPeak + "\t" + treeMzList.get(tmpPeak) + "\n"}
 
@@ -255,11 +261,11 @@ class PostXCMSflow {
     }
 
     //include isotope filter?
-    static void ms1idSearch (String tmpXCMS, String ms1psvDB, String[] adductArray, Double tol){
+    static void ms1idSearch (String proName, String tmpXCMS, String ms1psvDB, String[] adductArray, Double tol){
         File tmpInputFile = new File(tmpXCMS)
         BufferedReader br = new BufferedReader(new FileReader(tmpInputFile))
 
-        File resultDir = new File("result-ms1-tmp")
+        File resultDir = new File("result-ms1-$proName")
         if (resultDir.exists()){
             resultDir.deleteDir()
         }
@@ -267,8 +273,8 @@ class PostXCMSflow {
 
         Map<Double, ArrayList<MetaboliteDBRef>> ms1DB = MS1Search.loadPSVDatabase(ms1psvDB)
 
-        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-ms1-tmp","0-result-ms1")))
-        bw << "RT(min),precursorMZ,Intensity,MassError(ppm),MS1Score,Lib_Mass,Lib_Name,Lib_InChI\n"
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-ms1-$proName","0-result-ms1")))
+        bw << "MS1ID,RT(min),precursorMZ,Intensity,AdductType,MassError(ppm),MS1Score,Lib_Mass,Lib_Name,Lib_InChI\n"
 
         Integer tmpi = -1
         br.eachLine {
@@ -282,11 +288,12 @@ class PostXCMSflow {
             Integer tmpMSlevel = Integer.valueOf(tmpline[2])
             if (tmpMSlevel == 1) {
                 println("MS1 processing...")
+                String tmpID = tmpline[0]
                 BigDecimal tmpRT = (BigDecimal.valueOf(Double.valueOf(tmpline[3])) / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
                 BigDecimal tmpMZ = BigDecimal.valueOf(Double.valueOf(tmpline[4]))
                 BigDecimal tmpIntensity = BigDecimal.valueOf(Double.valueOf(tmpline[5]))
                 for (def tempAdduct : adductArray) {
-                    String peakInfoBar = "$tmpRT,$tmpMZ,$tmpIntensity,"
+                    String peakInfoBar = "$tmpID,$tmpRT,$tmpMZ,$tmpIntensity,$tempAdduct,"
 
                     AdductRaw adductRaw = new AdductRaw(tmpMZ, tempAdduct)
                     Double tempNeutralMass = adductRaw.getNeuralMass()
@@ -300,12 +307,12 @@ class PostXCMSflow {
         bw.close()
     }
 
-    static void ms2AnalyzerAnnotate(String inputFile, String queryFile, Double tol){
+    static void ms2AnalyzerAnnotate(String proName, String inputFile, String queryFile, Double tol){
         QueryFile tmpQFile = new QueryFile()
         tmpQFile.readQueryFile(queryFile)
 
         Spectrum spectrum = InputFileRead.XCMSread(inputFile, true)
-        File tmpDir = new File("result-ms2Ana-tmp")
+        File tmpDir = new File("result-ms2Ana-$proName")
         if (tmpDir.exists()){tmpDir.delete()}
         tmpDir.mkdir()
         File tmpFile = new File(tmpDir,"ms2AnaResult")

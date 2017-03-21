@@ -60,10 +60,18 @@ public class MetaboIdent {
             System.exit(0);
         }
 
+        Logger logger = Logger.getLogger(MetaboIdent.class.getName());
         if (cmd.hasOption("p")) {
             SoftwareProperties.readPropFromFile(cmd.getOptionValue("p"));
+        }else {
+            logger.warning("Not set the property file with the option |-p|");
+            System.exit(0);
         }
-        Logger logger = Logger.getLogger(MetaboIdent.class.getName());
+
+        String proName = "temp";
+        if (SoftwareProperties.getPropertiesPair().get(PropertyName.getPROJECT_NAME()) != null) {
+            proName = SoftwareProperties.getPropertiesPair().get(PropertyName.getPROJECT_NAME());
+        }
 
         Integer idFlow = 1;
         if (SoftwareProperties.getPropertiesPair().get(PropertyName.getID_WORKFLOW()) != null){
@@ -86,7 +94,7 @@ public class MetaboIdent {
                 adductArray[0] = "[M+H]";
             }
 
-            PostXCMSflow.ms1idSearch(tmpInputFile, tmpMS1DB, adductArray, tmpTolerance);
+            PostXCMSflow.ms1idSearch(proName, tmpInputFile, tmpMS1DB, adductArray, tmpTolerance);
         } else if(idFlow == 2){
             String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
             String tmpMetFragDBType = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_TYPE());
@@ -118,7 +126,7 @@ public class MetaboIdent {
                     adductArray[0] = "[M+H]";
                 }
 
-                PostXCMSflow.ms2idMFrag(tmpInputFile, metFragParalist, adductArray, tmpTolerance);
+                PostXCMSflow.ms2idMFrag(proName, tmpInputFile, metFragParalist, adductArray, tmpTolerance);
             }else {
                 logger.warning("Lack of parameters__ InputFilePath, MetFragDatabasePath(offline), MetFragDatabaseType");
             }
@@ -126,7 +134,7 @@ public class MetaboIdent {
             String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
             String tmpSLib = SoftwareProperties.getPropertiesPair().get(PropertyName.getSPECTRA_LIB_PATH());
             if (tmpInputFile != null && tmpSLib != null){
-                PostXCMSflow.ms2idSLib(tmpInputFile, tmpSLib, 10.0);
+                PostXCMSflow.ms2idSLib(proName, tmpInputFile, tmpSLib, 10.0);
             }else {
                 logger.warning("Lack of parameters__-i2, -sLib");
             }
@@ -135,7 +143,7 @@ public class MetaboIdent {
             String tmpQueryFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getMS2ANALYZER_Q_PATH());
             Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
 
-            PostXCMSflow.ms2AnalyzerAnnotate(tmpInputFile, tmpQueryFile, tmpTolerance);
+            PostXCMSflow.ms2AnalyzerAnnotate(proName, tmpInputFile, tmpQueryFile, tmpTolerance);
         }
 
         if (cmd.hasOption("s")) {

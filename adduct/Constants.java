@@ -121,6 +121,10 @@ public class Constants {
         ADDUCTMAP.put("[M+IsoProp+Na+H]",new AdductType("[M+IsoProp+Na+H]",84.05511,1));
         ADDUCTMAP.put("[M+H-H2O]",new AdductType("[M+H-H2O]",-19.01839+1.007276*2,1));  //add
 
+        ADDUCTMAP.put("[M+H-2H2O]",new AdductType("[M+H-2H2O]",-19.01839*2+1.007276*3,1));  //add
+        ADDUCTMAP.put("[M+H-NH3]",new AdductType("[M+H-NH3]",-18.033823+1.007276*2,1));  //add
+        ADDUCTMAP.put("[2M+H-H2O]",new AdductType("[2M+H-H2O]",-19.01839+1.007276*2,1,2));  //add
+
         ADDUCTMAP.put("[2M+H]",new AdductType("[2M+H]",1.007276,1,2));
         ADDUCTMAP.put("[2M+NH4]",new AdductType("[2M+NH4]",18.033823,1,2));
         ADDUCTMAP.put("[2M+Na]",new AdductType("[2M+Na]",22.989218,1,2));

@@ -7,6 +7,7 @@ class SoftwareProperties {
     static HashMap<String, String> propertiesPair = new HashMap<>()
 
     static void propInistial(){
+        propertiesPair.put(PropertyName.PROJECT_NAME,null)
         propertiesPair.put(PropertyName.INPUT_PATH,null)
         propertiesPair.put(PropertyName.TOL,null)
         propertiesPair.put(PropertyName.ADDUCT_TYPE,null)

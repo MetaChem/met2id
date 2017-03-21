@@ -31,12 +31,12 @@ class SearchRefLib {
     }
 
     static ArrayList<MetaboliteSpectralMatch> compareMGF(ArrayList<Double> matchKeySet, Map<Double, ArrayList<MetaboliteDBRef>> spectrumLib,
-                                                         Map<Double, Double> querySpectra, Double cutoff){
+                                                         Map<Double, Double> querySpectra, Double cutoffScore, Double cutoffMZdiff = 0.3){
         ArrayList<MetaboliteSpectralMatch> matchMet = new ArrayList<>()
         for (Double tmpKey:matchKeySet){
             for (MetaboliteDBRef tmpMet: spectrumLib.get(tmpKey)){
-                Double tmpMS2Score = MathTool.similirityScore(querySpectra, tmpMet.spectrum, 0.3)   //tolerance
-                if (tmpMS2Score > cutoff) {
+                Double tmpMS2Score = MathTool.similirityScore(querySpectra, tmpMet.spectrum, cutoffMZdiff)   //the mz dff tolerance of same peak in diff spectrum
+                if (tmpMS2Score > cutoffScore) {
                     matchMet.push(new MetaboliteSpectralMatch(tmpMet, tmpMS2Score))
                 }
             }
@@ -69,12 +69,13 @@ class SearchRefLib {
                 tmpS.trim()
 
                 if (tmpS == "BEGIN IONS"){
-
                 }
 
                 def matchInfo1 = tmpS =~ /(?i)^PEPMASS=(.+)/
                 if (matchInfo1.find()){ parantIonMZ = Double.valueOf(matchInfo1[0][1])}
-                def matchInfo2 = tmpS =~ /^([\d\.]+)\s+([\d\.]+)$/
+                def matchInfo1m = tmpS =~ /(?i)^PRECURSORMZ=(.+)/
+                if (matchInfo1m.find()){ parantIonMZ = Double.valueOf(matchInfo1m[0][1])}
+                def matchInfo2 = tmpS =~ /^([\d\.]+)\s+([\d\.]+)/
                 if (matchInfo2.find()){
                     tmpSpectra.put(Double.valueOf(matchInfo2[0][1]), Double.valueOf(matchInfo2[0][2]))
                 }

@@ -4,6 +4,7 @@ package property
  * Created by Thin123 on 2017/3/1.
  */
 class PropertyName {
+    static String PROJECT_NAME = "Project_Name";
     static String INPUT_PATH = "Input_DataFile_Path";
     static String TOL = "Tolerance";
     static String ADDUCT_TYPE = "Adduct_Type";
