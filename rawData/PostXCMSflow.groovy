@@ -57,6 +57,8 @@ class PostXCMSflow {
             tmpline = line.split(/\t/)
             println("$tempi")
             Integer tmpMSLevel = Integer.valueOf(tmpline[2])
+            if (!tmpline[3].isNumber()){tmpline[3] = "0"}
+            if (!tmpline[5].isNumber()){tmpline[5] = "0"}
             if (tmpMSLevel == 1) {
                 def tmpInfo = [tmpline[3], tmpline[4], tmpline[5]].collect() { BigDecimal.valueOf(Double.valueOf(it)) }
                 tmpInfo[0] = (tmpInfo[0] / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
@@ -73,7 +75,7 @@ class PostXCMSflow {
 
                     tempParalist.RetentionTime = ID1Info.get(lastPID).get(0)
                     tempParalist.PeakListPath = tempTest.writeMz2File(paraDir, tempMz2List, tempiR)
-                    tempParalist.ResultPath = resultDir.toString() + "/result$tempiR"
+                    tempParalist.ResultPath = resultDir.toString() + "/result_$lastPID"
                     tempParalist.PrecursorMz = ID1Info.get(lastPID)[1]
                     println(tempParalist.RetentionTime + "***&&&***")
                     ID1check.put(lastPID, 1)
@@ -112,7 +114,7 @@ class PostXCMSflow {
 
             tempParalist.RetentionTime = ID1Info.get(lastPID)[0]
             tempParalist.PeakListPath = tempTest.writeMz2File(paraDir, tempMz2List, tempiR)
-            tempParalist.ResultPath = resultDir.toString() + "/result$tempiR"
+            tempParalist.ResultPath = resultDir.toString() + "/result_$lastPID"
             tempParalist.PrecursorMz = ID1Info.get(lastPID)[1]
             println(tempParalist.RetentionTime + "***&&&***")
             ID1check.put(lastPID, 1)
@@ -142,7 +144,7 @@ class PostXCMSflow {
         }
 
         Map<Double, ArrayList<MetaboliteDBRef>> ms1DB = MS1Search.loadPSVDatabase(tempParalist.LocalDatabasePath)
-        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-mfrag-tmp","0-result-ms1_woms2")))
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-mfrag-$proName","0-result-ms1_woms2")))
         bw << "RT(min),precursorMZ,Intensity,MassError(ppm),MS1Score,Lib_Mass,Lib_Name,Lib_InChI\n"
         for (Integer tmpID: ID1check.keySet()){
             if (ID1check.get(tmpID) == 0) {
@@ -247,7 +249,7 @@ class PostXCMSflow {
                 treeMzList.put(tmpKey, tempMz2List.get(tmpKey))
             }
             String peakInfo = "ParentPeakID=$lastPID\nRetentionTime(min)=$retentionTime\nprecursorMZ=$precursorMz\nExperimental spectra peak list\n"
-            String peakInfoBar = "$retentionTime,$precursorMz,"
+            String peakInfoBar = "$lastPID,$retentionTime,$precursorMz,"
             for (Double tmpPeak:treeMzList.keySet()){ peakInfo += tmpPeak + "\t" + treeMzList.get(tmpPeak) + "\n"}
 
             String resultPath = resultDir.toString() + "/result${tempiR}_${retentionTime}_${precursorMz}_"
