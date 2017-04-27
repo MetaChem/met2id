@@ -6,8 +6,13 @@ package assemble
 class ResultAss {
 
     static Peak2InChI2IDResult MetFragResultAss(String proName){
+        Peak2InChI2IDResult tmpPeak2inchi2id = new Peak2InChI2IDResult()
+
         File workDir = new File("")
         def resultDir = workDir.getAbsolutePath() + "/result-mfrag-$proName"
+        File tmpfile = new File(resultDir)
+        if (!tmpfile.exists()){return tmpPeak2inchi2id}
+
         def dirs = new File(resultDir).list()
         //resultDir.eachDir { dirs << it.name }
         File cResultFile = new File(resultDir + "/0-result-mfrag")
@@ -16,7 +21,6 @@ class ResultAss {
         BufferedWriter bw = new BufferedWriter(new FileWriter(cResultFile))
         bw << "ParentPeakID,RT(min),precursorMZ,Adduct,NeutralMass,Score,InChI,FragmenterScore_Values,MaximumTreeDepth,MonoisotopicMass,Identifier,MolecularFormula,FormulasOfExplPeaks,InChIKey2,InChIKey1,FragmenterScore,ExplPeaks,NoExplPeaks,NumberPeaksUsed\n"
 
-        Peak2InChI2IDResult tmpPeak2inchi2id = new Peak2InChI2IDResult()
         for (def tmpFileName : dirs){
             if (tmpFileName == "0-result-mfrag"||tmpFileName == "0-result-ms1_woms2") continue
             println(tmpFileName)
