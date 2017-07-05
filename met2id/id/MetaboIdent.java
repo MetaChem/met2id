@@ -2,10 +2,13 @@ package met2id.id;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import met2id.assemble.AssTool;
-import met2id.assemble.Peak2InChI2IDResult;
+import met2id.assemble.IDResultList;
+import met2id.assemble.PeakIDlist;
 import met2id.assemble.ResultAss;
 import met2id.db.TransformSDF;
 import met2id.property.PropertyName;
@@ -135,8 +138,8 @@ public class MetaboIdent {
 
         if (cmd.hasOption("s")) {
             if (!cmd.hasOption("p")){ proName = cmd.getOptionValue("s");}
-            Peak2InChI2IDResult acc = ResultAss.MetFragResultAss(proName);
-            acc = ResultAss.SearchLibResultAss(acc, proName);
+            Map<String, PeakIDlist> acc = ResultAss.MetFragResultAss(proName);
+            acc = ResultAss.SearchLibResultAss(proName, acc);
             AssTool.writeAssembleFile(proName,acc);
         }
 

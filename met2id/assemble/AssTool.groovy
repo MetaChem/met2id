@@ -17,24 +17,18 @@ class AssTool {
         }
         return inchiM
     }
-    static String toString(Peak2InChI2IDResult tmpp2i2r) {
-        String tmpS = ""
 
-        for (String tmpa:tmpp2i2r.inchiIDlist.keySet()) {
-            ArrayList<IDResult> tmpIDRarray = tmpp2i2r.inchiIDlist.get(tmpa)
-            tmpS += "$tmpa\t$tmpIDRarray\n"
-        }
-
-        return tmpS
-    }
-
-    static void writeAssembleFile(String proName, Peak2InChI2IDResult tmpp2in2id){
+    static void writeAssembleFile(String proName, Map<String, PeakIDlist> tmpList){
         File tmpDir = new File("AssembleResult_$proName")
         if (tmpDir.exists()){tmpDir.delete()}
         tmpDir.mkdir()
+
         File tmpOut = new File(tmpDir,"assResult_$proName")
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(tmpOut))
-        bufferedWriter.write(AssTool.toString(tmpp2in2id))
+        bufferedWriter.write("PeakInfo\tInChI\tMetaboliteInfo\tScore\tID_Result\n")
+        for (String tmpa : tmpList.keySet()){
+            bufferedWriter.write(tmpList.get(tmpa).toString())
+        }
         bufferedWriter.close()
     }
 

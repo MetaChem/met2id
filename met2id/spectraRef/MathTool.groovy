@@ -86,7 +86,7 @@ class MathTool {
         println(similirityScore(dbIntDist, queryIntDist, 1.2))
 
         Map spLib = SearchRefLib.loadMGF("test.mgf")
-        ArrayList ms1Ar = SearchRefLib.searchMGF(231.0, 10, spLib)
+        ArrayList ms1Ar = SearchRefLib.searchMS1mass(231.0, 10, spLib)
         ArrayList ms2Ar = SearchRefLib.compareMGF(ms1Ar, spLib,queryIntDist,0)
         println(ms2Ar)
         println("****&&&&")

@@ -18,10 +18,10 @@ public class MetaboliteDB {
 
     }
 
-    public MetaboliteDB(String acc, String na, String des, double moniMass) {
+    public MetaboliteDB(String acc, String na, String formula, double moniMass) {
         this.accession = acc;
         this.name = na;
-        this.description = des;
+        this.chemical_formula = formula;
         this.monisotopic_moleculate_weight = moniMass;
     }
 
@@ -30,5 +30,7 @@ public class MetaboliteDB {
         this.monisotopic_moleculate_weight = moniMass;
     }
 
-
+    public String toString(){
+        return accession + "," + name + "," + chemical_formula + "," + Double.toString(monisotopic_moleculate_weight);
+    }
 }
