@@ -18,7 +18,9 @@ class IDResultList {
 
     void putInfo(String inchi, Double score = 0, MetaboliteDB metaboliteDB = null, IDResult idResult = null){
         inchiScore.put(inchi, score)
-        inchiMet.put(inchi, metaboliteDB)
+        if (!inchiMet.containsKey(inchi)) {
+            inchiMet.put(inchi, metaboliteDB)
+        }
         putIDResult(inchi, idResult)
     }
 

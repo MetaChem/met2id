@@ -69,8 +69,8 @@ class ResultAss {
 
         while ((line=br.readLine()) != null) {
             if (lineNum==0){
-                continue
                 lineNum++
+                continue
             }
             String[] linePart1 = line.split(/,/,6);
             String[] linePart2 = linePart1[5].split(/,"/,3);
