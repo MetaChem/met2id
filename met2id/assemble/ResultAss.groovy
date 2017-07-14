@@ -25,7 +25,6 @@ class ResultAss {
 
         for (def tmpFileName : dirs){
             if (tmpFileName == "0-result-mfrag"||tmpFileName == "0-result-ms1_woms2") continue
-            println(tmpFileName)
             File tmpF =  new File(resultDir + "/" +tmpFileName)
             String[] info_bar = tmpFileName.tokenize(/_/)
             ArrayList<String> inchiResultSum = new ArrayList<>()
@@ -51,7 +50,9 @@ class ResultAss {
 
                     MetaboliteDB tmpMet = new MetaboliteDB(tmpSepPart2[3], tmpSepPart2[3], tmpSepPart2[4], Double.valueOf(tmpSepPart2[2]))
                     IDResult tmpidRe = new IDResult("MetFrag", Double.valueOf(tmpSepPart1[0]),tmpi,inchiResultSum.size())
-                    tmpPeak2inchi2id.get(info_bar[1]).getIdResultList().putInfo(AssTool.inchiMainLayer(tmpSepPart1[1]),0,tmpMet,tmpidRe)
+                    String tmpa = AssTool.inchiMainLayer(tmpSepPart1[1])
+                    tmpPeak2inchi2id.get(info_bar[1]).getIdResultList().putInfo(tmpa,0,tmpMet,tmpidRe)
+                    tmpPeak2inchi2id.get(info_bar[1]).getIdResultList().putMetFragScore(tmpa, tmpSepPart1[0])
                 }
                 inchiResultSum.clear()
             }
@@ -93,7 +94,9 @@ class ResultAss {
                 tmpP2in2ID.put(peakID, new PeakIDlist(tmpPeak))
             }
 
-            tmpP2in2ID.get(peakID).getIdResultList().putInfo(AssTool.inchiMainLayer(inchi),0,tmpMet,tmpIDr)
+            String tmpa = AssTool.inchiMainLayer(inchi)
+            tmpP2in2ID.get(peakID).getIdResultList().putInfo(tmpa,0,tmpMet,tmpIDr)
+            tmpP2in2ID.get(peakID).getIdResultList().putLibSearchScore(tmpa, score)
         }
 
         return tmpP2in2ID

@@ -35,7 +35,6 @@ public class MetaboIdent {
         Options options = new Options();
 
         options.addOption("p", true, "Gloabal met2id.property file path");
-        options.addOption("s", true, "Sum up the output files");
         //multi-met2id.id method
 
         options.addOption("h", false, "Help");
@@ -134,10 +133,7 @@ public class MetaboIdent {
             Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
 
             PostXCMSflow.ms2AnalyzerAnnotate(proName, tmpInputFile, tmpQueryFile, tmpTolerance);
-        }
-
-        if (cmd.hasOption("s")) {
-            if (!cmd.hasOption("p")){ proName = cmd.getOptionValue("s");}
+        } else if (idFlow == 5){
             Map<String, PeakIDlist> acc = ResultAss.MetFragResultAss(proName);
             acc = ResultAss.SearchLibResultAss(proName, acc);
             AssTool.writeAssembleFile(proName,acc);

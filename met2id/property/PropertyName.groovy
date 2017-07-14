@@ -19,4 +19,6 @@ class PropertyName {
     static String METFRAG_DB_PATH = "MetFrag_Database_Path";
 
     static String MS2ANALYZER_Q_PATH = "MS2Analyzer_QueryFile_Path";
+
+    static String TOTAL_SCORE_PARAMETER = "Total_Score_Parameter";
 }

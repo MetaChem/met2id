@@ -22,6 +22,8 @@ class SoftwareProperties {
         propertiesPair.put(PropertyName.METFRAG_DB_PATH,null)
 
         propertiesPair.put(PropertyName.MS2ANALYZER_Q_PATH,null)
+
+        propertiesPair.put(PropertyName.TOTAL_SCORE_PARAMETER,null)
     }
 
     static HashMap<String, String> readPropFromFile(String propFile){
@@ -29,7 +31,7 @@ class SoftwareProperties {
         println("Reading the met2id.property file...")
         File tmpFile = new File(propFile)
         tmpFile.eachLine {
-            if (it =~ "#" || it=="") return
+            if (it =~ "^#" || it=="") return
             println(it)
             ArrayList<String> tmpS = it.split("=")
             if (propertiesPair.containsKey(tmpS[0].trim())){
