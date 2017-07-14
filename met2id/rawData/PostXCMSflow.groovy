@@ -281,15 +281,11 @@ class PostXCMSflow {
         Integer tmpi = -1
         br.eachLine {
             tmpi++
-            if (tmpi == 0){
-                return
-            }
-            println("$tmpi")
-
+            if (tmpi == 0) {return}
+            if (tmpi%100 == 0) {println("$tmpi masses finished...")}
             String[] tmpline = it.split("\t")
             Integer tmpMSlevel = Integer.valueOf(tmpline[2])
             if (tmpMSlevel == 1) {
-                println("MS1 processing...")
                 String tmpID = tmpline[0]
                 BigDecimal tmpRT = (BigDecimal.valueOf(Double.valueOf(tmpline[3])) / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
                 BigDecimal tmpMZ = BigDecimal.valueOf(Double.valueOf(tmpline[4]))

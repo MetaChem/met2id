@@ -3,6 +3,7 @@ package met2id.id;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -62,81 +63,94 @@ public class MetaboIdent {
             proName = SoftwareProperties.getPropertiesPair().get(PropertyName.getPROJECT_NAME());
         }
 
-        Integer idFlow = 0;
+        ArrayList<String> idFlow = new ArrayList<String>();
         if (SoftwareProperties.getPropertiesPair().get(PropertyName.getID_WORKFLOW()) != null){
-            idFlow = Integer.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getID_WORKFLOW()));
+            String tmpflow = SoftwareProperties.getPropertiesPair().get(PropertyName.getID_WORKFLOW());
+            idFlow = new ArrayList<String>(Arrays.asList(tmpflow.split(":")));
         }else {
             logger.info("Set the id_workflow in the global met2id.property file, the default is 0");
         }
 
-        if (idFlow == 1) {
-            String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
-            String tmpMS1DB = SoftwareProperties.getPropertiesPair().get(PropertyName.getMS1_DB_PATH());
-            Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
+        for (String tmpsf:idFlow) {
+            if (tmpsf.equals("1")) {
+                System.out.println("MS1 searching...");
 
-            String[] adductArray;
-            String tmpAdductType = SoftwareProperties.getPropertiesPair().get(PropertyName.getADDUCT_TYPE());
-            if (tmpAdductType != null){
-                adductArray = tmpAdductType.split(",");
-            }else {
-                adductArray = new String[1];
-                adductArray[0] = "[M+H]";
-            }
+                String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
+                String tmpMS1DB = SoftwareProperties.getPropertiesPair().get(PropertyName.getMS1_DB_PATH());
+                Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
 
-            PostXCMSflow.ms1idSearch(proName, tmpInputFile, tmpMS1DB, adductArray, tmpTolerance);
-        } else if(idFlow == 2){
-            String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
-            String tmpMetFragDBType = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_TYPE());
-            String tmpMetFragDBPath = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_PATH());
-            Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
-
-            if (tmpInputFile != null  && tmpMetFragDBPath != null && tmpMetFragDBType != null) {
-                MetFragParaList metFragParalist = new MetFragParaList();
-                if (Integer.valueOf(tmpMetFragDBType) == 1) {
-                    metFragParalist.setMetFragDatabaseType("LocalPSV");
-                    metFragParalist.setLocalDatabasePath(tmpMetFragDBPath);
-                }else if (Integer.valueOf(tmpMetFragDBType) == 2) {
-                    metFragParalist.setMetFragDatabaseType("LocalSDF");
-                    String tmpDB2 = TransformSDF.breakInChIKey(tmpMetFragDBPath).toString();
-                    metFragParalist.setLocalDatabasePath(tmpDB2);
-                }else if (Integer.valueOf(tmpMetFragDBType) == 3) {
-                    metFragParalist.setMetFragDatabaseType("PubChem");
-                }else {
-                    logger.warning("Illegal parameter--- MetFrag_Database_Type");
-                }
-
-                //Adduct format: -a [M] -a [M+H] -a [M-H] (old)
                 String[] adductArray;
                 String tmpAdductType = SoftwareProperties.getPropertiesPair().get(PropertyName.getADDUCT_TYPE());
-                if (tmpAdductType != null){
+                if (tmpAdductType != null) {
                     adductArray = tmpAdductType.split(",");
-                }else {
+                } else {
                     adductArray = new String[1];
                     adductArray[0] = "[M+H]";
                 }
 
-                PostXCMSflow.ms2idMFrag(proName, tmpInputFile, metFragParalist, adductArray, tmpTolerance);
-            }else {
-                logger.warning("Lack of parameters__ InputFilePath, MetFragDatabasePath(offline), MetFragDatabaseType");
-            }
-        } else if (idFlow == 3) {
-            String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
-            String tmpSLib = SoftwareProperties.getPropertiesPair().get(PropertyName.getSPECTRA_LIB_PATH());
-            if (tmpInputFile != null && tmpSLib != null){
-                PostXCMSflow.ms2idSLib(proName, tmpInputFile, tmpSLib, 10.0);
-            }else {
-                logger.warning("Lack of parameters__-i2, -sLib");
-            }
-        } else if (idFlow == 4) {
-            String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
-            String tmpQueryFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getMS2ANALYZER_Q_PATH());
-            Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
+                PostXCMSflow.ms1idSearch(proName, tmpInputFile, tmpMS1DB, adductArray, tmpTolerance);
+            } else if (tmpsf.equals("2")) {
+                System.out.println("MetFrag start...");
 
-            PostXCMSflow.ms2AnalyzerAnnotate(proName, tmpInputFile, tmpQueryFile, tmpTolerance);
-        } else if (idFlow == 5){
-            Map<String, PeakIDlist> acc = ResultAss.MetFragResultAss(proName);
-            acc = ResultAss.SearchLibResultAss(proName, acc);
-            AssTool.writeAssembleFile(proName,acc);
+                String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
+                String tmpMetFragDBType = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_TYPE());
+                String tmpMetFragDBPath = SoftwareProperties.getPropertiesPair().get(PropertyName.getMETFRAG_DB_PATH());
+                Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
+
+                if (tmpInputFile != null && tmpMetFragDBPath != null && tmpMetFragDBType != null) {
+                    MetFragParaList metFragParalist = new MetFragParaList();
+                    if (Integer.valueOf(tmpMetFragDBType) == 1) {
+                        metFragParalist.setMetFragDatabaseType("LocalPSV");
+                        metFragParalist.setLocalDatabasePath(tmpMetFragDBPath);
+                    } else if (Integer.valueOf(tmpMetFragDBType) == 2) {
+                        metFragParalist.setMetFragDatabaseType("LocalSDF");
+                        String tmpDB2 = TransformSDF.breakInChIKey(tmpMetFragDBPath).toString();
+                        metFragParalist.setLocalDatabasePath(tmpDB2);
+                    } else if (Integer.valueOf(tmpMetFragDBType) == 3) {
+                        metFragParalist.setMetFragDatabaseType("PubChem");
+                    } else {
+                        logger.warning("Illegal parameter--- MetFrag_Database_Type");
+                    }
+
+                    //Adduct format: -a [M] -a [M+H] -a [M-H] (old)
+                    String[] adductArray;
+                    String tmpAdductType = SoftwareProperties.getPropertiesPair().get(PropertyName.getADDUCT_TYPE());
+                    if (tmpAdductType != null) {
+                        adductArray = tmpAdductType.split(",");
+                    } else {
+                        adductArray = new String[1];
+                        adductArray[0] = "[M+H]";
+                    }
+
+                    PostXCMSflow.ms2idMFrag(proName, tmpInputFile, metFragParalist, adductArray, tmpTolerance);
+                } else {
+                    logger.warning("Lack of parameters__ InputFilePath, MetFragDatabasePath(offline), MetFragDatabaseType");
+                }
+            } else if (tmpsf.equals("3")) {
+                System.out.println("Spectrum library searching...");
+
+                String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
+                String tmpSLib = SoftwareProperties.getPropertiesPair().get(PropertyName.getSPECTRA_LIB_PATH());
+                if (tmpInputFile != null && tmpSLib != null) {
+                    PostXCMSflow.ms2idSLib(proName, tmpInputFile, tmpSLib, 10.0);
+                } else {
+                    logger.warning("Lack of parameters__-i2, -sLib");
+                }
+            } else if (tmpsf.equals("4")) {
+                System.out.println("MS2Analyzer searching...");
+
+                String tmpInputFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getINPUT_PATH());
+                String tmpQueryFile = SoftwareProperties.getPropertiesPair().get(PropertyName.getMS2ANALYZER_Q_PATH());
+                Double tmpTolerance = Double.valueOf(SoftwareProperties.getPropertiesPair().get(PropertyName.getTOL()));
+
+                PostXCMSflow.ms2AnalyzerAnnotate(proName, tmpInputFile, tmpQueryFile, tmpTolerance);
+            } else if (tmpsf.equals("5")) {
+                System.out.println("MS/MS identification results integrating...");
+
+                Map<String, PeakIDlist> acc = ResultAss.MetFragResultAss(proName);
+                acc = ResultAss.SearchLibResultAss(proName, acc);
+                AssTool.writeAssembleFile(proName, acc);
+            }
         }
 
         long endTime = System.currentTimeMillis();
