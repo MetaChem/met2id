@@ -62,8 +62,12 @@ class MathTool {
             dbSqurSum += Math.pow(weightInt(tmpdbKey, dbIntDist.get(tmpdbKey)), 2.0)
             tmpdbKey = null
         }
-
-        return dotProduct/(Math.sqrt(qSqurSum) * Math.sqrt(dbSqurSum))
+        Double tmpdouble = dotProduct/(Math.sqrt(qSqurSum) * Math.sqrt(dbSqurSum))
+        if (tmpdouble.isNaN()){
+            return 0
+        } else {
+            return tmpdouble
+        }
     }
 
     static Double weightInt(Double mz, Double intensity){

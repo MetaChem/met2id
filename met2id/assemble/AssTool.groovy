@@ -25,7 +25,7 @@ class AssTool {
 
         File tmpOut = new File(tmpDir,"assResult_$proName")
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(tmpOut))
-        bufferedWriter.write("PeakInfo\tInChI\tMetaboliteInfo\tScore\tID_Result\n")
+        bufferedWriter.write("PeakInfo\tInChI\tMetaboliteInfo\tScore(total,MetFrag,LibSearch)\tID_Result\n")
         for (String tmpa : tmpList.keySet()){
             bufferedWriter.write(tmpList.get(tmpa).toString())
         }

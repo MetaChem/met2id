@@ -227,7 +227,7 @@ class PostXCMSflow {
                     String peakInfoBar = "$lastPID,$retentionTime,$precursorMz,"
                     for (Double tmpPeak:treeMzList.keySet()){ peakInfo += tmpPeak + "\t" + treeMzList.get(tmpPeak) + "\n"}
 
-                    String resultPath = resultDir.toString() + "/result${tempiR}_${retentionTime}_${precursorMz}_"
+                    String resultPath = resultDir.toString() + "/result${lastPID}_${retentionTime}_${precursorMz}_"
 
                     ArrayList ms1Array = SearchRefLib.searchMS1mass(precursorMz, tol, spLib)
                     ArrayList ms2Array = SearchRefLib.compareMGF(ms1Array, spLib, treeMzList,0) //cutoff
@@ -252,7 +252,7 @@ class PostXCMSflow {
             String peakInfoBar = "$lastPID,$retentionTime,$precursorMz,"
             for (Double tmpPeak:treeMzList.keySet()){ peakInfo += tmpPeak + "\t" + treeMzList.get(tmpPeak) + "\n"}
 
-            String resultPath = resultDir.toString() + "/result${tempiR}_${retentionTime}_${precursorMz}_"
+            String resultPath = resultDir.toString() + "/result${lastPID}_${retentionTime}_${precursorMz}_"
 
             ArrayList ms1Array = SearchRefLib.searchMS1mass(precursorMz, tol, spLib)
             ArrayList ms2Array = SearchRefLib.compareMGF(ms1Array, spLib, treeMzList,0) //cutoff

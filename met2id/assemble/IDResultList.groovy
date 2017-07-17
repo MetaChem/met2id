@@ -76,4 +76,11 @@ class IDResultList {
         }
         return tmpOutput
     }
+
+    String getScoreString(String inchi){
+        String tmp = inchiScore.get(inchi).toString() + "," +
+                inchiScoreMetFrag.get(inchi).toString() + "," +
+                inchiScoreLibSearch.get(inchi).toString()
+        return  tmp
+    }
 }

@@ -31,7 +31,7 @@ class SearchRefLib {
     }
 
     static ArrayList<MetaboliteSpectralMatch> compareMGF(ArrayList<Double> matchKeySet, Map<Double, ArrayList<MetaboliteDBRef>> spectrumLib,
-                                                         Map<Double, Double> querySpectra, Double cutoffScore, Double cutoffMZdiff = 0.3){
+                                                         Map<Double, Double> querySpectra, Double cutoffScore = 0, Double cutoffMZdiff = 0.3){
         ArrayList<MetaboliteSpectralMatch> matchMet = new ArrayList<>()
         for (Double tmpKey:matchKeySet){
             for (MetaboliteDBRef tmpMet: spectrumLib.get(tmpKey)){
