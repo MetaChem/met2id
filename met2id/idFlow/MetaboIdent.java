@@ -1,4 +1,4 @@
-package met2id.id;
+package met2id.idFlow;
 
 import java.io.IOException;
 
@@ -8,10 +8,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import met2id.assemble.AssTool;
-import met2id.assemble.IDResultList;
 import met2id.assemble.PeakIDlist;
 import met2id.assemble.ResultAss;
-import met2id.db.TransformSDF;
+import met2id.database.TransformSDF;
 import met2id.property.PropertyName;
 import met2id.property.SoftwareProperties;
 import met2id.metFrag.MetFragParaList;

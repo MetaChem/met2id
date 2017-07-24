@@ -178,7 +178,7 @@ class PostXCMSflow {
         if (cResultFile.exists()){cResultFile.delete()}
         cResultFile.createNewFile()
         BufferedWriter bwSum = new BufferedWriter(new FileWriter(cResultFile))
-        bwSum << "ParentPeakID,RT(min),precursorMZ,LibComp_Score,Organism,Lib_Mass,Lib_Name,Lib_InChI\n"
+        bwSum << "ParentPeakID\tRT(min)\tprecursorMZ\tscore\tOrganism\tLib_Mass\tLib_Name\tLib_InChI\n"
 
         BufferedReader br = new BufferedReader(new FileReader(tempFile))
         Map<Integer, ArrayList<BigDecimal>> ID1Info = new HashMap<>()   //[0,1,2] RT, MZ, Intensity
@@ -189,6 +189,8 @@ class PostXCMSflow {
         Integer thisPID = 0
         BigInteger tempi = -1
         Integer tempiR = 0
+
+        Map<String, Double> sumItem = new HashMap<>()
 
         while ((line = br.readLine()) != null){
             tempi++
@@ -224,7 +226,7 @@ class PostXCMSflow {
                     tempMz2List.put(Double.valueOf(tmpline[4]), Double.valueOf(tmpline[5]))
 
                     String peakInfo = "ParentPeakID=$lastPID\nRetentionTime(min)=$retentionTime\nprecursorMZ=$precursorMz\nExperimental spectra peak list\n"
-                    String peakInfoBar = "$lastPID,$retentionTime,$precursorMz,"
+                    String peakInfoBar = "$lastPID\t$retentionTime\t$precursorMz\t"
                     for (Double tmpPeak:treeMzList.keySet()){ peakInfo += tmpPeak + "\t" + treeMzList.get(tmpPeak) + "\n"}
 
                     String resultPath = resultDir.toString() + "/result${lastPID}_${retentionTime}_${precursorMz}_"
@@ -232,7 +234,7 @@ class PostXCMSflow {
                     ArrayList ms1Array = SearchRefLib.searchMS1mass(precursorMz, tol, spLib)
                     ArrayList ms2Array = SearchRefLib.compareMGF(ms1Array, spLib, treeMzList,0) //cutoff
                     SearchRefLib.writeResult(resultPath, peakInfo, ms2Array)
-                    SearchRefLib.writeResultSumup(bwSum, peakInfoBar, ms2Array)
+                    sumItem = SearchRefLib.writeResultSumup(bwSum, peakInfoBar, ms2Array, sumItem)
                 }
                 lastPID = thisPID
             }
@@ -249,7 +251,7 @@ class PostXCMSflow {
                 treeMzList.put(tmpKey, tempMz2List.get(tmpKey))
             }
             String peakInfo = "ParentPeakID=$lastPID\nRetentionTime(min)=$retentionTime\nprecursorMZ=$precursorMz\nExperimental spectra peak list\n"
-            String peakInfoBar = "$lastPID,$retentionTime,$precursorMz,"
+            String peakInfoBar = "$lastPID\t$retentionTime\t$precursorMz\t"
             for (Double tmpPeak:treeMzList.keySet()){ peakInfo += tmpPeak + "\t" + treeMzList.get(tmpPeak) + "\n"}
 
             String resultPath = resultDir.toString() + "/result${lastPID}_${retentionTime}_${precursorMz}_"
@@ -257,9 +259,19 @@ class PostXCMSflow {
             ArrayList ms1Array = SearchRefLib.searchMS1mass(precursorMz, tol, spLib)
             ArrayList ms2Array = SearchRefLib.compareMGF(ms1Array, spLib, treeMzList,0) //cutoff
             SearchRefLib.writeResult(resultPath, peakInfo, ms2Array)
-            SearchRefLib.writeResultSumup(bwSum, peakInfoBar, ms2Array)
+            sumItem = SearchRefLib.writeResultSumup(bwSum, peakInfoBar, ms2Array, sumItem)
         }
         bwSum.close()
+
+        File cResultFileOrder = new File(resultDir, "/0-result-slib-o")    // Sum-up file
+        if (cResultFileOrder.exists()){cResultFileOrder.delete()}
+        cResultFileOrder.createNewFile()
+        BufferedWriter bwSumO = new BufferedWriter(new FileWriter(cResultFileOrder))
+        bwSumO << "ParentPeakID\tRT(min)\tprecursorMZ\tOrganism\tLib_Mass\tLib_Name\tLib_InChI\tscore\n"
+        SearchRefLib.writeResultSumupOrder(bwSumO, sumItem)
+        bwSumO.close()
+
+        SearchRefLib.fdrCal(cResultFileOrder)
     }
 
     //include met2id.isotope filter?

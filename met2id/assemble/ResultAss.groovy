@@ -62,8 +62,8 @@ class ResultAss {
         return tmpPeak2inchi2id
     }
 
-    static Map<String, PeakIDlist> SearchLibResultAss ( String proName, Map<String, PeakIDlist> tmpP2in2ID){
-        File slibResultFile = new File("result-slib-$proName","0-result-slib")
+    static Map<String, PeakIDlist> SearchLibResultAss (String proName, Map<String, PeakIDlist> tmpP2in2ID){
+        File slibResultFile = new File("result-slib-$proName","0-result-slib-o_q")
         BufferedReader br = new BufferedReader(new FileReader(slibResultFile))
         String line
         Integer lineNum = 0
@@ -73,22 +73,30 @@ class ResultAss {
                 lineNum++
                 continue
             }
-            String[] linePart1 = line.split(/,/,6);
-            String[] linePart2 = linePart1[5].split(/,"/,3);
+            String[] linePart = line.split(/\t/,9)
+            linePart[5].replaceAll("\"","")
+            linePart[6].replaceAll("\"","")
 
-            String peakID = linePart1[0]
-            Double rt = Double.valueOf(linePart1[1])
-            Double mass_ex = Double.valueOf(linePart1[2])
-            Double score = Double.valueOf(linePart1[3])
-            String db = linePart1[4]
+            String peakID = linePart[0]
+            Double rt = Double.valueOf(linePart[1])
+            Double mass_ex = Double.valueOf(linePart[2])
+            String db = linePart[3]
 
-            Double mass_lib = Double.valueOf(linePart2[0])
-            String name = linePart2[1]
-            String inchi = linePart2[2]
+            Double mass_lib = Double.valueOf(linePart[4])
+            String name = linePart[5]
+            String inchi = linePart[6]
+
+            Double score = Double.valueOf(linePart[7])
+            String qvalueInfo = ""
+            if (linePart[8]) {
+                qvalueInfo = linePart[8]
+            }else {
+                qvalueInfo = "NA"
+            }
 
             PeakPairA tmpPeak = new PeakPairA(peakID, rt, mass_ex)
             MetaboliteDB tmpMet = new MetaboliteDB(db, name, "ShownInINCHI", mass_lib)
-            IDResult tmpIDr = new IDResult("LibSearch",score)   // Not set rank and the total met2id.id num
+            IDResult tmpIDr = new IDResult("LibSearch",score,0,0,qvalueInfo)   // Not set rank and the total met2id.id num
 
             if (!tmpP2in2ID.containsKey(peakID)){
                 tmpP2in2ID.put(peakID, new PeakIDlist(tmpPeak))

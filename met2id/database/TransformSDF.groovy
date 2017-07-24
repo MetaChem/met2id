@@ -1,4 +1,4 @@
-package met2id.db
+package met2id.database
 
 /**
  * Created by hahah on 2016/11/24.

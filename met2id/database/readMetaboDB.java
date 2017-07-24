@@ -1,4 +1,4 @@
-package met2id.db;
+package met2id.database;
 
 import met2id.metaboEntity.MetaboliteDB;
 import org.w3c.dom.Document;

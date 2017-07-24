@@ -24,6 +24,17 @@ class MathTool {
         Double dotProduct = 0
         Double qSqurSum = 0
         Double dbSqurSum = 0
+        Double factor = 1
+
+        // To avoid few peaks in the query spectra but still got a high score
+        Integer querySize =  queryIntDist.keySet().size()
+        if (querySize==3){
+            factor = 0.8
+        } else if (querySize==2){
+            factor = 0.5
+        } else if (querySize==1){
+            factor = 0.3
+        }
 
         def tmpqKey = null
         def tmpdbKey = null
@@ -66,7 +77,7 @@ class MathTool {
         if (tmpdouble.isNaN()){
             return 0
         } else {
-            return tmpdouble
+            return factor * tmpdouble
         }
     }
 

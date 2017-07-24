@@ -1,4 +1,4 @@
-package met2id.id;
+package met2id.idFlow;
 
 public class Adduct {
 

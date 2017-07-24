@@ -21,6 +21,10 @@ class MetaboliteDBRef extends MetaboliteDB {
     String metInfo
 
     MetaboliteDBRef(){}
+    String extractName(String oriName){
+        String[] item = oriName.split(" ")
+        return item[1]
+    }
 
     @Override
     String toString() {

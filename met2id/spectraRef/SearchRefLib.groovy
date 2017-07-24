@@ -1,5 +1,8 @@
 package met2id.spectraRef
 
+import java.lang.reflect.Method
+
+
 /**
  * Created by hahah on 2016/12/5.
  */
@@ -19,15 +22,52 @@ class SearchRefLib {
         }
     }
 
-    static void writeResultSumup(BufferedWriter bws, String peakInfoBar, ArrayList<MetaboliteSpectralMatch> matchArrayList){
+    static void writeResultSumupOrder(BufferedWriter bws, Map<String, Double> sumItem){
+        ArrayList<String> tmpArray = sumItem.keySet().sort({ a, b->
+            sumItem.get(a) > sumItem.get(b) ? -1:1
+        })
+        for (String tmpa:tmpArray){
+            bws.write("$tmpa\t")
+            bws.write(sumItem.get(tmpa).toString())
+            bws.write("\n")
+        }
+    }
+
+    static Map<String, Double> writeResultSumup(BufferedWriter bws, String peakInfoBar, ArrayList<MetaboliteSpectralMatch> matchArrayList, Map<String, Double> sumItem){
         try {
             for (MetaboliteSpectralMatch tmpMet:matchArrayList){
-                bws.write(peakInfoBar)
-                bws.write("$tmpMet.ms2LibScore,$tmpMet.metaboliteRef.organism,$tmpMet.metaboliteRef.parentMass,\"$tmpMet.metaboliteRef.name\",\"$tmpMet.metaboliteRef.inchi\"")
+                String tmp1 = peakInfoBar + "$tmpMet.ms2LibScore\t$tmpMet.metaboliteRef.organism\t$tmpMet.metaboliteRef.parentMass\t\"$tmpMet.metaboliteRef.name\"\t\"$tmpMet.metaboliteRef.inchi\""
+                String tmpName = tmpMet.metaboliteRef.extractName(tmpMet.metaboliteRef.name)
+                String tmp2 = peakInfoBar + "$tmpMet.metaboliteRef.organism\t$tmpMet.metaboliteRef.parentMass\t\"$tmpName\"\t\"$tmpMet.metaboliteRef.inchi\""
+                bws.write(tmp1)
                 bws.write("\n")
+
+                if (sumItem.get(tmp2)){
+                    if (tmpMet.ms2LibScore>sumItem.get(tmp2)){
+                        sumItem.put(tmp2, tmpMet.ms2LibScore)
+                    }
+                } else {
+                    sumItem.put(tmp2, tmpMet.ms2LibScore)
+                }
             }
+
+            return sumItem
         }finally {
         }
+    }
+
+    static void fdrCal(String fileTarget){
+        String fileOutput = fileTarget + "_q"
+
+        //Class fooClass = Class.forName("FooBar");
+        //Method fooMethod = fooClass.getMethod("fooMethod", String.class);
+        //String fooReturned = (String)fooMethod.invoke(fooClass.newInstance(), "I did it");
+        Class.forName("QValueEstimator").main("-target",fileTarget,"-out",
+                fileOutput,"-method","EBA")
+    }
+
+    static void fdrCal(File file){
+        fdrCal(file.toString())
     }
 
     static ArrayList<MetaboliteSpectralMatch> compareMGF(ArrayList<Double> matchKeySet, Map<Double, ArrayList<MetaboliteDBRef>> spectrumLib,

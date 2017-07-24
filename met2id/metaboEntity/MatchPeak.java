@@ -1,6 +1,6 @@
 package met2id.metaboEntity;
 
-import met2id.id.Adduct;
+import met2id.idFlow.Adduct;
 
 import java.util.HashMap;
 import java.util.Map;
