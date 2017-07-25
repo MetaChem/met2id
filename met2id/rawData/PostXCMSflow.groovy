@@ -299,6 +299,8 @@ class PostXCMSflow {
             Integer tmpMSlevel = Integer.valueOf(tmpline[2])
             if (tmpMSlevel == 1) {
                 String tmpID = tmpline[0]
+                if (tmpline[3] == "NA") {tmpline[3] = "0"}
+                if (tmpline[5] == "NA") {tmpline[5] = "0"}
                 BigDecimal tmpRT = (BigDecimal.valueOf(Double.valueOf(tmpline[3])) / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
                 BigDecimal tmpMZ = BigDecimal.valueOf(Double.valueOf(tmpline[4]))
                 BigDecimal tmpIntensity = BigDecimal.valueOf(Double.valueOf(tmpline[5]))

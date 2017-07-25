@@ -19,6 +19,9 @@ class InputFileRead {
             it = it.trim()
             String[] tmpline = it.split("\t")
 
+            tmpline[3] = na2zero(tmpline[3])
+            tmpline[5] = na2zero(tmpline[5])
+
             Integer msLevel = Integer.valueOf(tmpline[2])
             Double rt = Double.valueOf(tmpline[3])
             Double mz = Double.valueOf(tmpline[4])
@@ -43,6 +46,12 @@ class InputFileRead {
         }
         br.close()
         return spectrum
+    }
+
+    static String na2zero(String tmpna){
+        if (tmpna == "NA") {return "0"}
+        if (tmpna == "NaN") {return "0"}
+        return tmpna
     }
 
     static void main(String[] args){
