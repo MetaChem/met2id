@@ -18,6 +18,11 @@ class AssTool {
         return inchiM
     }
 
+    static String inchi2Formula(String inchi){
+        String[] tmpLayer = inchi.tokenize("/")
+        return tmpLayer[1]
+    }
+
     static void writeAssembleFile(String proName, Map<String, PeakIDlist> tmpList){
         File tmpDir = new File("AssembleResult_$proName")
         if (tmpDir.exists()){tmpDir.delete()}
@@ -25,7 +30,7 @@ class AssTool {
 
         File tmpOut = new File(tmpDir,"assResult_$proName")
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(tmpOut))
-        bufferedWriter.write("PeakInfo\tInChI\tMetaboliteInfo\tScore(total,MetFrag,LibSearch)\tID_Result\n")
+        bufferedWriter.write("PeakInfo(ID,RT(min),MZ,Intensity,Adduct,NeutralMass)\tInChI(MainLayer)\tMetaboliteInfo(Accession,Identifier,Formula,MassInLib)\tScore(Total,MetFrag,LibSearch)\tID_Result(Method,Score,Rank,ItemTotal,q-value)\n")
         for (String tmpa : tmpList.keySet()){
             bufferedWriter.write(tmpList.get(tmpa).toString())
         }

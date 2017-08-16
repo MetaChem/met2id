@@ -74,8 +74,8 @@ class ResultAss {
                 continue
             }
             String[] linePart = line.split(/\t/,9)
-            linePart[5].replaceAll("\"","")
-            linePart[6].replaceAll("\"","")
+            // linePart[5].replaceAll("\"","")
+            // linePart[6].replaceAll("\"","")
 
             String peakID = linePart[0]
             Double rt = Double.valueOf(linePart[1])
@@ -95,7 +95,7 @@ class ResultAss {
             }
 
             PeakPairA tmpPeak = new PeakPairA(peakID, rt, mass_ex)
-            MetaboliteDB tmpMet = new MetaboliteDB(db, name, "ShownInINCHI", mass_lib)
+            MetaboliteDB tmpMet = new MetaboliteDB(db, name, AssTool.inchi2Formula(inchi), mass_lib)
             IDResult tmpIDr = new IDResult("LibSearch",score,0,0,qvalueInfo)   // Not set rank and the total met2id.id num
 
             if (!tmpP2in2ID.containsKey(peakID)){
