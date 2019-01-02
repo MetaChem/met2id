@@ -13,7 +13,7 @@ class TransformSDF {
     static File breakInChIKey(String oriSDFdb){
         File oriDB = new File(oriSDFdb)
         File newDB = new File(oriSDFdb + "newDB")
-        if (newDB.exists()){
+        if (newDB.exists() || oriSDFdb.endsWith("newDB")){
             return newDB
         }
         boolean inchiFlag = false
@@ -22,12 +22,12 @@ class TransformSDF {
         BufferedWriter wr = new BufferedWriter(new FileWriter(newDB))
         String tmpS
 
+        println("Transforming the SDF Database ...")
         while ( (tmpS = br.readLine()) != null ){
             if (tmpS == "> <INCHI_IDENTIFIER>"){tmpS = "> <InChI>"}
             wr.write(tmpS+"\n")
 
             if (inchiFlag){
-                println("Transforming the SDF Database ...")
                 def matchInchiKey = tmpS =~ /^\s*(\w+)-(\w+)/
                 wr.write("\n> <InChIKey2>\n${matchInchiKey[0][2]}\n\n> <InChIKey1>\n${matchInchiKey[0][1]}\n")
 

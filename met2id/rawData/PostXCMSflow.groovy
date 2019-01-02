@@ -21,7 +21,7 @@ import met2id.spectraRef.SearchRefLib
 class PostXCMSflow {
 
     //@tol  used in the ms1Search(without ms2)
-    static void ms2idMFrag (String proName, String tmpXCMS, MetFragParaList tempParalist, String[] adductArray, Double tol){
+    static void ms2idMFrag (String proName, String tmpXCMS, MetFragParaList tempParalist, String[] adductArray, Double tol, Boolean whether_ms1_search=false){
         def tempTest = new MetFragGear()
         File paraDir = new File("para-$proName")
         File resultDir = new File("result-mfrag-$proName")
@@ -55,7 +55,7 @@ class PostXCMSflow {
                 continue
             }
             tmpline = line.split(/\t/)
-            println("$tempi")
+            println("LINE: $tempi")
             Integer tmpMSLevel = Integer.valueOf(tmpline[2])
             if (!tmpline[3].isNumber()){tmpline[3] = "0"}
             if (!tmpline[5].isNumber()){tmpline[5] = "0"}
@@ -143,23 +143,25 @@ class PostXCMSflow {
             }
         }
 
-        Map<Double, ArrayList<MetaboliteDBRef>> ms1DB = MS1Search.loadPSVDatabase(tempParalist.LocalDatabasePath)
-        BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-mfrag-$proName","0-result-ms1_woms2")))
-        bw << "RT(min),precursorMZ,Intensity,MassError(ppm),MS1Score,Lib_Mass,Lib_Name,Lib_InChI\n"
-        for (Integer tmpID: ID1check.keySet()){
-            if (ID1check.get(tmpID) == 0) {
-                for (def tempAdduct : adductArray) {
-                    String peakInfoBar = (ID1Info.get(tmpID).join(',')) + ","
+        if (whether_ms1_search) {
+            Map<Double, ArrayList<MetaboliteDBRef>> ms1DB = MS1Search.loadPSVDatabase(tempParalist.LocalDatabasePath)
+            BufferedWriter bw = new BufferedWriter(new FileWriter(new File("result-mfrag-$proName", "0-result-ms1_woms2")))
+            bw << "RT(min),precursorMZ,Intensity,MassError(ppm),MS1Score,Lib_Mass,Lib_Name,Lib_InChI\n"
+            for (Integer tmpID : ID1check.keySet()) {
+                if (ID1check.get(tmpID) == 0) {
+                    for (def tempAdduct : adductArray) {
+                        String peakInfoBar = (ID1Info.get(tmpID).join(',')) + ","
 
-                    AdductRaw adductRaw = new AdductRaw(ID1Info.get(tmpID).get(1), tempAdduct)
-                    Double tempNeutralMass = adductRaw.getNeuralMass()
+                        AdductRaw adductRaw = new AdductRaw(ID1Info.get(tmpID).get(1), tempAdduct)
+                        Double tempNeutralMass = adductRaw.getNeuralMass()
 
-                    ArrayList ms1Array = MS1Search.searchMS1DBmass(tempNeutralMass, tol, ms1DB)
-                    MS1Search.writeMS1Result(bw, peakInfoBar, ms1Array)
+                        ArrayList ms1Array = MS1Search.searchMS1DBmass(tempNeutralMass, tol, ms1DB)
+                        MS1Search.writeMS1Result(bw, peakInfoBar, ms1Array)
+                    }
                 }
             }
+            bw.close()
         }
-        bw.close()
     }
 
     // ***FILE_FORMAT*** the ms2 peaks from the same spectra have been clustered and behind the parent ms1 peak ID
@@ -198,7 +200,7 @@ class PostXCMSflow {
                 continue
             }
             tmpline = line.split(/\t/)
-            println("$tempi")
+            println("LINE: $tempi")
             Integer tmpMSLevel = Integer.valueOf(tmpline[2])
             if (tmpMSLevel == 1) {
                 if (tmpline[3] == "NA") { tmpline[3] = "0" }
@@ -294,7 +296,7 @@ class PostXCMSflow {
         br.eachLine {
             tmpi++
             if (tmpi == 0) {return}
-            if (tmpi%100 == 0) {println("$tmpi masses finished...")}
+            if (tmpi%100 == 0) {println("$tmpi lines finished...")}
             String[] tmpline = it.split("\t")
             Integer tmpMSlevel = Integer.valueOf(tmpline[2])
             if (tmpMSlevel == 1) {

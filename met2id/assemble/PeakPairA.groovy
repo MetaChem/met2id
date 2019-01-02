@@ -10,12 +10,13 @@ class PeakPairA extends PeakPair{
     Double neutralMass
 
     PeakPairA(String id, Double retentionTime = 0, Double precursorMZ = 0,
-              String adduct = "ShowInLib", Double neutralMass = 0){
+              String adduct = "ShowInLib", Double neutralMass = 0, Double intensity = 0){
         this.precursorMZ = precursorMZ
         this.id = id
         this.retentionTime = retentionTime
         this.adduct = adduct
         this.neutralMass = neutralMass
+        this.precursorIntensity = intensity
     }
 
     String toString(){

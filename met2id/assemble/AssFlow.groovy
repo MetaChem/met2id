@@ -5,7 +5,7 @@ import met2id.metaboEntity.MetaboliteDB
 /**
  * Created by hahah on 2017/1/5.
  */
-class ResultAss {
+class AssFlow {
 
     static Map<String, PeakIDlist> MetFragResultAss(String proName){
         Map<String, PeakIDlist> tmpPeak2inchi2id = new HashMap<>()  // ID, peaks & metabolites & scores & results

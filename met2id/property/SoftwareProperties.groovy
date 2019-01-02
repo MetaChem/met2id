@@ -28,6 +28,7 @@ class SoftwareProperties {
 
     static HashMap<String, String> readPropFromFile(String propFile){
         propInistial()
+        println("#==========\n")
         println("Reading the met2id.property file...")
         File tmpFile = new File(propFile)
         tmpFile.eachLine {

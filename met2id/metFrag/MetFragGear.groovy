@@ -114,7 +114,8 @@ public class MetFragGear {
         } catch (Exception e1) {
             e1.printStackTrace();
             logger.error("Error when retrieving compounds.");
-            System.exit(2);
+//            System.exit(2);
+            return
         }
         //run the MetFrag process -> in silico fragmentation, fragment-peak-assignment, scoring
         try {

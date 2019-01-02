@@ -22,6 +22,6 @@ class PeakPair {
     PeakPair(){}
 
     String toString(){
-        return "$id,$retentionTime,$precursorMZ,$precursorIntensity"
+        return "$id,$retentionTime,$precursorMZ"
     }
 }
